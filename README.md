@@ -24,9 +24,9 @@ cd Monochroma
 ./setup.sh
 ```
 
-`setup.sh` installs the required toolchains (Go, Node/pnpm, Python), builds the Navidrome server and the Feishin web UI, sets up `hifi-api` and the playlist transferer (each in their own venv), walks you through the Tidal login for `hifi-api`, writes `navidrome.toml`/`.env.local` from the example templates, and, if you opt in, installs systemd services for all three components so the whole stack starts on boot. It's safe to re-run: existing pieces are detected and reused.
+`setup.sh` installs the required toolchains (Go, Node, npm/pnpm, Python), builds both web UIs (Navidrome's own admin UI at `/app` and the Feishin client at `/`) and then the server itself, sets up `hifi-api` and the playlist transferer (each in their own venv), walks you through the Tidal login for `hifi-api`, writes `navidrome.toml`/`.env.local` from the example templates, and, if you opt in, installs systemd services for all three components so the whole stack starts on boot. It's safe to re-run: existing pieces are detected and reused.
 
-See `./setup.sh --help` for options, and the comments at the top of the script for the full list of environment variables (ports, Go/Node versions, etc.) you can override.
+> **Building manually?** Don't use a bare `go build`: the server embeds `ui/build/*` at compile time and that directory isn't checked in, so a plain `go build` produces a binary whose `/app` returns *404 page not found*. Use `make build`, which builds the admin UI first, or run `setup.sh`.
 
 Once running, open `http://localhost:4533` for the Feishin UI (`/app` for Navidrome's own admin UI). Put it behind a reverse proxy (nginx/Caddy) with TLS for anything beyond local use, and keep `hifi-api`'s port firewalled to localhost; only Navidrome needs to reach it.
 
