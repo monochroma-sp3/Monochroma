@@ -59,7 +59,14 @@ const SERVER_NAMES: Record<ServerType, string> = {
 const LoginRoute = () => {
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
-    const [mode, setMode] = useState<'login' | 'register'>('login');
+    // firstTime mirrors the server's own zero-users check (window.FIRST_TIME,
+    // set by feishinSettings in server/server.go) — on a fresh instance there's
+    // no admin to log into yet, so the page opens straight into a dedicated
+    // "create admin" form instead of the normal login/register toggle.
+    const firstTime = window.FIRST_TIME === true || window.FIRST_TIME === 'true';
+    const [mode, setMode] = useState<'createAdmin' | 'login' | 'register'>(
+        firstTime ? 'createAdmin' : 'login',
+    );
     const { addServer, deleteServer, setCurrentServer, updateServer } = useAuthStoreActions();
     const currentServer = useCurrentServer();
     const serverList = useServerList();
@@ -143,12 +150,13 @@ const LoginRoute = () => {
         try {
             setIsLoading(true);
 
-            if (mode === 'register') {
+            if (mode === 'register' || mode === 'createAdmin') {
                 if (values.password !== values.confirmPassword) {
                     setIsLoading(false);
                     return toast.error({ message: 'Passwords do not match' });
                 }
-                const res = await fetch(`${serverUrl}/auth/register`, {
+                const endpoint = mode === 'createAdmin' ? '/auth/createAdmin' : '/auth/register';
+                const res = await fetch(`${serverUrl}${endpoint}`, {
                     body: JSON.stringify({
                         password: values.password,
                         username: values.username,
@@ -164,10 +172,14 @@ const LoginRoute = () => {
                     } catch {
                         serverMessage = '';
                     }
+                    const defaultMessage =
+                        mode === 'createAdmin'
+                            ? 'Could not create admin account'
+                            : 'Registration failed';
                     const message =
                         res.status === 409
                             ? 'That username has been already taken'
-                            : serverMessage || 'Registration failed';
+                            : serverMessage || defaultMessage;
                     return toast.error({ message });
                 }
             }
@@ -264,7 +276,7 @@ const LoginRoute = () => {
     const isSubmitDisabled =
         !form.values.username ||
         !form.values.password ||
-        (mode === 'register' && !form.values.confirmPassword);
+        ((mode === 'register' || mode === 'createAdmin') && !form.values.confirmPassword);
     const serverIcon = SERVER_ICONS[serverType as ServerType];
     const serverDisplayName = SERVER_NAMES[serverType as ServerType];
 
@@ -285,6 +297,17 @@ const LoginRoute = () => {
                                 <Text fw={600} size="xl">
                                     {serverName}
                                 </Text>
+                                {mode === 'createAdmin' && (
+                                    <Stack gap={2}>
+                                        <Text fw={600} size="md" ta="center">
+                                            Create your admin account
+                                        </Text>
+                                        <Text c="dimmed" size="sm" ta="center">
+                                            This is a fresh instance with no accounts yet — the
+                                            first account you create here becomes its administrator.
+                                        </Text>
+                                    </Stack>
+                                )}
                             </Stack>
 
                             <Stack gap="md">
@@ -305,7 +328,7 @@ const LoginRoute = () => {
                                     variant="filled"
                                     {...form.getInputProps('password')}
                                 />
-                                {mode === 'register' && (
+                                {(mode === 'register' || mode === 'createAdmin') && (
                                     <PasswordInput
                                         label="Confirm password"
                                         required
@@ -325,14 +348,14 @@ const LoginRoute = () => {
                             >
                                 {mode === 'login'
                                     ? t('common.login', { defaultValue: 'Login' })
-                                    : 'Register'}
+                                    : mode === 'createAdmin'
+                                      ? 'Create Admin Account'
+                                      : 'Register'}
                             </Button>
-                            {registrationEnabled && (
+                            {mode !== 'createAdmin' && registrationEnabled && (
                                 <Button
                                     fullWidth
-                                    onClick={() =>
-                                        setMode(mode === 'login' ? 'register' : 'login')
-                                    }
+                                    onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
                                     type="button"
                                     variant="subtle"
                                 >

@@ -340,6 +340,15 @@ func (s *Server) feishinSettings(w http.ResponseWriter, r *http.Request) {
 		registration = "true"
 	}
 
+	// firstTime mirrors the same check Navidrome's own /app login page uses
+	// (serve_index.go) to decide whether to show a "create admin" form instead
+	// of a login form — Feishin's login page uses it the same way.
+	userCount, err := s.ds.User(r.Context()).CountAll()
+	firstTime := "false"
+	if err == nil && userCount == 0 {
+		firstTime = "true"
+	}
+
 	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	_, _ = fmt.Fprintf(w, `"use strict";
@@ -351,7 +360,8 @@ window.LEGACY_AUTHENTICATION = "false";
 window.ANALYTICS_DISABLED = "true";
 window.ENABLE_REGISTRATION = %q;
 window.TRANSFER_URL = %q;
-`, origin, registration, conf.Server.Feishin.TransferURL)
+window.FIRST_TIME = %q;
+`, origin, registration, conf.Server.Feishin.TransferURL, firstTime)
 }
 
 // validateTLSCertificates validates the TLS certificate and key files before starting the server.

@@ -86,6 +86,7 @@ declare global {
         FS_PLAYBACK_TRANSCODE_FORMAT?: string;
         FS_PLAYBACK_WEB_AUDIO?: string;
         ENABLE_REGISTRATION?: boolean | string;
+        FIRST_TIME?: boolean | string;
         LEGACY_AUTHENTICATION?: boolean | string;
         REMOTE_URL?: string;
         SERVER_LOCK?: boolean | string;
