@@ -405,6 +405,11 @@ Type=simple
 User=$run_user
 WorkingDirectory=$REPO_DIR/transferer
 EnvironmentFile=-$REPO_DIR/transferer/.env
+# Put the venv's bin/ first: running gunicorn by absolute path does not
+# activate the venv, so console scripts installed alongside it (yt-dlp) would
+# otherwise be missing from a systemd unit's minimal PATH. ffmpeg comes from
+# the system paths that follow.
+Environment=PATH=$REPO_DIR/transferer/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ExecStart=$REPO_DIR/transferer/venv/bin/gunicorn -b 0.0.0.0:$TRANSFERER_PORT -w 1 --worker-class gthread --threads 16 --timeout 600 app:app
 Restart=on-failure
 RestartSec=5

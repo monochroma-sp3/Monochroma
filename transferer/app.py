@@ -16,6 +16,7 @@ import os
 import re
 import secrets
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -1646,7 +1647,14 @@ def _handle_youtube_stream(nd_user, nd_pass, yt_url, playlist_name):
     try:
         result = subprocess.run(
             [
-                "yt-dlp",
+                # Invoke yt-dlp through the interpreter that's running this app
+                # rather than relying on a "yt-dlp" console script being on
+                # PATH. yt-dlp is a dependency in our own venv, and the service
+                # runs gunicorn by absolute path (which does NOT put the venv's
+                # bin/ on PATH), so a bare "yt-dlp" raises FileNotFoundError.
+                sys.executable,
+                "-m",
+                "yt_dlp",
                 "--flat-playlist",
                 "--dump-json",
                 "--no-download",
