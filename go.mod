@@ -39,8 +39,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.42
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/mileusna/useragent v1.3.5
-	github.com/onsi/ginkgo/v2 v2.28.1
-	github.com/onsi/gomega v1.39.1
+	github.com/onsi/ginkgo/v2 v2.32.0
+	github.com/onsi/gomega v1.40.0
 	github.com/pelletier/go-toml/v2 v2.3.0
 	github.com/pocketbase/dbx v1.12.0
 	github.com/pressly/goose/v3 v3.27.0
