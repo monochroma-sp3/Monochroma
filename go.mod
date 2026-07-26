@@ -23,7 +23,7 @@ require (
 	github.com/gen2brain/webp v0.5.5
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/cors v1.2.2
-	github.com/go-chi/httprate v0.15.0
+	github.com/go-chi/httprate v0.16.0
 	github.com/go-chi/jwtauth/v5 v5.4.0
 	github.com/go-viper/encoding/ini v0.1.1
 	github.com/gohugoio/hashstructure v0.6.0
