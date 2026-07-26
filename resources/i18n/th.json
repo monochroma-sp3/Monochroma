@@ -1,0 +1,715 @@
+{
+  "languageName": "ไทย",
+  "resources": {
+    "song": {
+      "name": "เพลง",
+      "fields": {
+        "albumArtist": "ศิลปินในอัลบั้ม",
+        "duration": "ความยาว",
+        "trackNumber": "#",
+        "playCount": "เล่นแล้ว",
+        "title": "ชื่อเพลง",
+        "artist": "ศิลปิน",
+        "album": "อัลบั้ม",
+        "path": "ที่อยู่ไฟล์",
+        "genre": "ประเภท",
+        "compilation": "รวมเพลง",
+        "year": "ปี",
+        "size": "ขนาด",
+        "updatedAt": "อัปเดตเมื่อ",
+        "bitRate": "บิตเรท",
+        "discSubtitle": "คำบรรยาย",
+        "starred": "รายการโปรด",
+        "comment": "ความคิดเห็น",
+        "rating": "ความนิยม",
+        "quality": "คุณภาพเสียง",
+        "bpm": "BPM",
+        "playDate": "เล่นล่าสุด",
+        "channels": "ช่อง",
+        "createdAt": "เพิ่มเมื่อ",
+        "grouping": "จัดกลุ่ม",
+        "mood": "อารมณ์",
+        "participants": "ผู้มีส่วนร่วม",
+        "tags": "แทกเพิ่มเติม",
+        "mappedTags": "แมพแทก",
+        "rawTags": "แทกเริ่มต้น",
+        "bitDepth": "Bit depth",
+        "sampleRate": "แซมเปิ้ลเรต",
+        "missing": "หายไป",
+        "libraryName": "ห้องสมุด",
+        "composer": "ผู้แต่ง",
+        "disc": ""
+      },
+      "actions": {
+        "addToQueue": "เพิ่มในคิว",
+        "playNow": "เล่นทันที",
+        "addToPlaylist": "เพิ่มในเพลย์ลิสต์",
+        "shuffleAll": "สุ่มทั้งหมด",
+        "download": "ดาวน์โหลด",
+        "playNext": "เล่นถัดไป",
+        "info": "ดูรายละเอียด",
+        "showInPlaylist": "แสดงในเพลย์ลิสต์",
+        "instantMix": "อินสแตนต์ มิก"
+      }
+    },
+    "album": {
+      "name": "อัลบั้ม",
+      "fields": {
+        "albumArtist": "ศิลปินในอัลบั้ม",
+        "artist": "ศิลปิน",
+        "duration": "ความยาว",
+        "songCount": "เพลง",
+        "playCount": "เล่นแล้ว",
+        "name": "ชื่ออัลบั้ม",
+        "genre": "ประเภท",
+        "compilation": "รวมเพลง",
+        "year": "ปี",
+        "updatedAt": "อัพเดตเมื่อ",
+        "comment": "ความคิดเห็น",
+        "rating": "ความนิยม",
+        "createdAt": "เพิ่มเมื่อ",
+        "size": "ขนาด",
+        "originalDate": "วันที่เริ่ม",
+        "releaseDate": "เผยแพร่เมื่อ",
+        "releases": "เผยแพร่ |||| เผยแพร่",
+        "released": "เผยแพร่เมื่อ",
+        "recordLabel": "ป้าย",
+        "catalogNum": "หมายเลขแคตาล็อก",
+        "releaseType": "ประเภท",
+        "grouping": "จัดกลุ่ม",
+        "media": "มีเดีย",
+        "mood": "อารมณ์",
+        "date": "บันทึกเมื่อ",
+        "missing": "หายไป",
+        "libraryName": "ห้องสมุด"
+      },
+      "actions": {
+        "playAll": "เล่นทั้งหมด",
+        "playNext": "เล่นถัดไป",
+        "addToQueue": "เพิ่มในคิว",
+        "shuffle": "เล่นแบบสุ่ม",
+        "addToPlaylist": "เพิ่มลงในเพลย์ลิสต์",
+        "download": "ดาวน์โหลด",
+        "info": "ดูรายละเอียด",
+        "share": "แบ่งปัน"
+      },
+      "lists": {
+        "all": "ทั้งหมด",
+        "random": "สุ่ม",
+        "recentlyAdded": "เพิ่มล่าสุด",
+        "recentlyPlayed": "เล่นล่าสุด",
+        "mostPlayed": "เล่นมากที่สุด",
+        "starred": "รายการโปรด",
+        "topRated": "ความนิยมสูง"
+      }
+    },
+    "artist": {
+      "name": "ศิลปิน",
+      "fields": {
+        "name": "ชื่อศิลปิน",
+        "albumCount": "จำนวนอัลบั้ม",
+        "songCount": "จำนวนเพลง",
+        "playCount": "เล่นแล้ว",
+        "rating": "ความนิยม",
+        "genre": "ประเภท",
+        "size": "ขนาด",
+        "role": "Role",
+        "missing": "หายไป"
+      },
+      "roles": {
+        "albumartist": "ศิลปินอัลบั้ม |||| ศิลปินอัลบั้ม",
+        "artist": "ศิลปิน |||| ศิลปิน",
+        "composer": "ผู้แต่ง |||| ผู้แต่ง",
+        "conductor": "คอนดักเตอร์ |||| คอนดักเตอร์",
+        "lyricist": "เนื้อเพลง |||| เนื้อเพลง",
+        "arranger": "ผู้ดำเนินการ |||| ผู้ดำเนินการ",
+        "producer": "ผู้จัด |||| ผู้จัด",
+        "director": "ไดเรกเตอร์ |||| ไดเรกเตอร์",
+        "engineer": "วิศวกร |||| วิศวกร",
+        "mixer": "มิกเซอร์ |||| มิกเซอร์",
+        "remixer": "รีมิกเซอร์ |||| รีมิกเซอร์",
+        "djmixer": "ดีเจมิกเซอร์ |||| ดีเจมิกเซอร์",
+        "performer": "ผู้เล่น |||| ผู้เล่น",
+        "maincredit": "ศิลปิน |||| ศิลปิน"
+      },
+      "actions": {
+        "shuffle": "เล่นสุ่ม",
+        "radio": "วิทยุ",
+        "topSongs": "เพลงยอดนิยม"
+      }
+    },
+    "user": {
+      "name": "บัญชีผู้ใช้",
+      "fields": {
+        "userName": "ชื่อผู้ใช้",
+        "isAdmin": "ผู้ดูแลระบบ?",
+        "lastLoginAt": "ล็อกอินล่าสุด",
+        "updatedAt": "อัปเดตล่าสุด",
+        "name": "ชื่อ",
+        "password": "รหัสผ่าน",
+        "createdAt": "สร้างเมื่อ",
+        "changePassword": "เปลี่ยนรหัสผ่าน",
+        "currentPassword": "รหัสผ่านปัจจุบัน",
+        "newPassword": "รหัสผ่านใหม่",
+        "token": "โทเคน",
+        "lastAccessAt": "เข้าใช้ล่าสุด",
+        "libraries": "ห้องสมุด"
+      },
+      "helperTexts": {
+        "name": "การเปลี่ยนชื่อจะมีผลในการล็อกอินครั้งถัดไป",
+        "libraries": "เลือกห้องสมุดสำหรับผู้ใช้นี้หรือปล่อยว่างเพื่อใช้ห้องสมุดเริ่มต้น"
+      },
+      "notifications": {
+        "created": "สร้างชื่อผู้ใช้",
+        "updated": "อัพเดตชื่อผู้ใช้",
+        "deleted": "ลบชื่อผู้ใช้"
+      },
+      "message": {
+        "listenBrainzToken": "ใส่โทเคน ListenBrainz ของคุณ",
+        "clickHereForToken": "กดที่นี่เพื่อรับโทเคนของคุณ",
+        "selectAllLibraries": "เลือกห้องสมุดทั้งหมด",
+        "adminAutoLibraries": "ผู้ดูแลเข้าถึงห้องสมุดทั้งหมดโดยอัตโนมัติ"
+      },
+      "validation": {
+        "librariesRequired": "ต้องเลือกห้องสมุด 1 ห้อง สำหรับผู้ใช้ที่ไม่ใช่ผู้ดูแล"
+      }
+    },
+    "player": {
+      "name": "เพลย์เยอร์",
+      "fields": {
+        "name": "เล่นจาก",
+        "transcodingId": "แปลงไฟล์",
+        "maxBitRate": "บิตเรทสูงสุด",
+        "client": "ลูกข่าย",
+        "userName": "ชื่อผู้ใช้",
+        "lastSeen": "ใช้งานล่าสุดเมื่อ",
+        "reportRealPath": "รายงาน Real Path",
+        "scrobbleEnabled": "ส่ง scrobble ไปยังบริการภายนอก"
+      }
+    },
+    "transcoding": {
+      "name": "แปลงไฟล์",
+      "fields": {
+        "name": "ชื่อ",
+        "targetFormat": "ชนิดไฟล์เสียง",
+        "defaultBitRate": "บิตเรท",
+        "command": "คำสั่ง"
+      }
+    },
+    "playlist": {
+      "name": "เพลย์ลิสต์",
+      "fields": {
+        "name": "ชื่อเพลย์ลิสต์",
+        "duration": "ความยาว",
+        "ownerName": "เจ้าของ",
+        "public": "สาธารณะ",
+        "updatedAt": "อัปเดตเมื่อ",
+        "createdAt": "สร้างเมื่อ",
+        "songCount": "เพลง",
+        "comment": "ความคิดเห็น",
+        "sync": "นำเข้าอัตโนมัติ",
+        "path": "นำเข้าจาก"
+      },
+      "actions": {
+        "selectPlaylist": "เลือกเพลย์ลิสต์",
+        "addNewPlaylist": "สร้าง \"%{name}\"",
+        "export": "ส่งออก",
+        "makePublic": "ทำเป็นสาธารณะ",
+        "makePrivate": "ทำเป็นส่วนตัว",
+        "saveQueue": "บันทึกคิวลงเพลย์ลิสต์",
+        "searchOrCreate": "ค้นหาเพลย์ลิสต์หรือพิมพ์เพื่อสร้างใหม่",
+        "pressEnterToCreate": "กด Enter เพื่อสร้างเพลย์ลิสต์",
+        "removeFromSelection": "เอาออกจากที่เลือกไว้"
+      },
+      "message": {
+        "duplicate_song": "เพิ่มเพลงซ้ำ",
+        "song_exist": "เพิ่มเพลงซ้ำกันในเพลย์ลิสต์ คุณจะเพิ่มเพลงต่อหรือข้าม",
+        "noPlaylistsFound": "ไม่พบเพลย์ลิสต์",
+        "noPlaylists": "ไม่มีเพลย์ลิสต์อยู่"
+      }
+    },
+    "radio": {
+      "name": "สถานีวิทยุ |||| สถานีวิทยุ",
+      "fields": {
+        "name": "ชื่อสถานี",
+        "streamUrl": "สตรีม URL",
+        "homePageUrl": "โฮมเพจ URL",
+        "updatedAt": "อัพเดทเมื่อ",
+        "createdAt": "สร้างเมื่อ"
+      },
+      "actions": {
+        "playNow": "เล่น"
+      }
+    },
+    "share": {
+      "name": "แบ่งปัน |||| แบ่งปัน",
+      "fields": {
+        "username": "แบ่งปันโดย",
+        "url": "URL",
+        "description": "คำอธิบาย",
+        "contents": "เนื้อหา",
+        "expiresAt": "หมดอายุเมื่อ",
+        "lastVisitedAt": "เยี่ยมชมครั้งล่าสุด",
+        "visitCount": "เยี่ยมชม",
+        "format": "ประเภทไฟล์",
+        "maxBitRate": "บิตเรตสูงสุด",
+        "updatedAt": "อัปเดตเมื่อ",
+        "createdAt": "สร้างเมื่อ",
+        "downloadable": "อนุญาตให้ดาวโหลด?"
+      }
+    },
+    "missing": {
+      "name": "ไฟล์ที่หายไป |||| ไฟล์ที่หายไป",
+      "fields": {
+        "path": "พาร์ท",
+        "size": "ขนาด",
+        "updatedAt": "หายไปจาก",
+        "libraryName": "ห้องสมุด"
+      },
+      "actions": {
+        "remove": "เอาออก",
+        "remove_all": "เอาออกทั้งหมด"
+      },
+      "notifications": {
+        "removed": "เอาไฟล์ที่หายไปออกแล้ว"
+      },
+      "empty": "ไม่มีไฟล์หาย"
+    },
+    "library": {
+      "name": "ห้องสมุด |||| ห้องสมุด",
+      "fields": {
+        "name": "ชื่อ",
+        "path": "พาร์ท",
+        "remotePath": "รีโมทพาร์ท",
+        "lastScanAt": "สแกนล่าสุด",
+        "songCount": "เพลง",
+        "albumCount": "อัลบัม",
+        "artistCount": "ศิลปิน",
+        "totalSongs": "เพลง",
+        "totalAlbums": "อัลบัม",
+        "totalArtists": "ศิลปิน",
+        "totalFolders": "แฟ้ม",
+        "totalFiles": "ไฟล์",
+        "totalMissingFiles": "ไฟล์ที่หายไป",
+        "totalSize": "ขนาดทั้งหมด",
+        "totalDuration": "ความยาว",
+        "defaultNewUsers": "ค่าเริ่มต้นผู้ใช้ใหม่",
+        "createdAt": "สร้าง",
+        "updatedAt": "อัพเดท"
+      },
+      "sections": {
+        "basic": "ข้อมูลเบื้องต้น",
+        "statistics": "สถิติ"
+      },
+      "actions": {
+        "scan": "สแกนห้องสมุด",
+        "manageUsers": "ตั้งค่าการเข้าถึง",
+        "viewDetails": "ดูรายละเอียด",
+        "quickScan": "สแกนแบบเร็ว",
+        "fullScan": "สแกนแบบเต็ม"
+      },
+      "notifications": {
+        "created": "สร้างห้องสมุดเรียบร้อย",
+        "updated": "อัพเดทห้องสมุดเรียบร้อย",
+        "deleted": "ลบห้องสมุดเพลงเรียบร้อยแล้ว",
+        "scanStarted": "เริ่มสแกนห้องสมุด",
+        "scanCompleted": "สแกนห้องสมุดเสร็จแล้ว",
+        "quickScanStarted": "เริ่มสแกนแบบเร็ว",
+        "fullScanStarted": "เริ่มสแกนแบบเต็ม",
+        "scanError": "การเริ่มสแกนผิดพลาด ดูในบันทึก"
+      },
+      "validation": {
+        "nameRequired": "ต้องใส่ชื่อห้องสมุดเพลง",
+        "pathRequired": "ต้องใส่พาร์ทของห้องสมุด",
+        "pathNotDirectory": "พาร์ทของห้องสมุดต้องเป็นแฟ้ม",
+        "pathNotFound": "ไม่เจอพาร์ทของห้องสมุด",
+        "pathNotAccessible": "ไม่สามารถเข้าพาร์ทของห้องสมุด",
+        "pathInvalid": "พาร์ทห้องสมุดไม่ถูก"
+      },
+      "messages": {
+        "deleteConfirm": "คุณแน่ใจว่าจะลบห้องสมุดนี้? นี่จะลบข้อมูลและการเข้าถึงของผู้ใช้ที่เกี่ยวข้องทั้งหมด",
+        "scanInProgress": "กำลังสแกน...",
+        "noLibrariesAssigned": "ไม่มีห้องสมุดสำหรับผู้ใช้นี้"
+      }
+    },
+    "plugin": {
+      "name": "ปลั๊กอิน |||| ปลั๊กอิน",
+      "fields": {
+        "id": "ID",
+        "name": "ชื่อ",
+        "description": "รายละเอียด",
+        "version": "เวอร์ชั่น",
+        "author": "ผู้สร้าง",
+        "website": "เว็บไซต์",
+        "permissions": "การอนุญาติ",
+        "enabled": "เปิดใช้",
+        "status": "สถานะ",
+        "path": "เส้นทาง",
+        "lastError": "ผิดพลาด",
+        "hasError": "ผิดพลาด",
+        "updatedAt": "อัพเดทแล้ว",
+        "createdAt": "ติดตั้งแล้ว",
+        "configKey": "คีย์",
+        "configValue": "ค่า",
+        "allUsers": "อนุญาติผู้ใช้ทั้งหมด",
+        "selectedUsers": "ผู้ใช้ถูกเลือก",
+        "allLibraries": "อนุญาติห้องสมุดเพลงทั้งหมด",
+        "selectedLibraries": "ห้องสมุดเพลงถูกเลือก",
+        "allowWriteAccess": ""
+      },
+      "sections": {
+        "status": "สถานะ",
+        "info": "ข้อมูลปลั๊กอิน",
+        "configuration": "การตั้งค่า",
+        "manifest": "แสดง",
+        "usersPermission": "สิทธิของผู้ใช้",
+        "libraryPermission": "สิทธิของห้องสมุดเพลง"
+      },
+      "status": {
+        "enabled": "เปิดใช้งานแล้ว",
+        "disabled": "ปิดใช้งานแล้ว"
+      },
+      "actions": {
+        "enable": "เปิดใช้งาน",
+        "disable": "ปิดใช้งาน",
+        "disabledDueToError": "แก้ไขข้อผิดพลาดก่อนเปิดใช้งาน",
+        "disabledUsersRequired": "เลือกผู้ใช้ที่จะเปิดใช้งาน",
+        "disabledLibrariesRequired": "เลือกห้องสมุดเพลงที่จะเปิดใช้งาน",
+        "addConfig": "เพิ่มการตั้งค่า",
+        "rescan": "สแกนซ้ำ"
+      },
+      "notifications": {
+        "enabled": "เปิดใช้ปลั๊กอินแล้ว",
+        "disabled": "ปิดใช้ปลั๊กอินแล้ว",
+        "updated": "ปลั๊กอินอัพเดท",
+        "error": "อัพเดทผิดพลาด"
+      },
+      "validation": {
+        "invalidJson": "ต้องตั้งค่าตามไวยากรณ์ JSON"
+      },
+      "messages": {
+        "configHelp": "ใส่ค่าให้เข้าคู่กับคีย์ของปลั๊กอิน ปล่อยว่างถ้าปลั๊กอินไม่ต้องการใช้",
+        "clickPermissions": "กดดูรายละเอียดของการอนุญาติ",
+        "noConfig": "ไม่ได้ตั้งค่า",
+        "allUsersHelp": "เมื่อเปิดใช้ ปลั๊กอินจะใช้กับผู้ใช้ทุกคน รวมถึงผู้ใช้ใหม่ในอนาคต",
+        "noUsers": "ไม่ได้เลือกผู้ใช้",
+        "permissionReason": "เหตุผล",
+        "usersRequired": "ปลั๊กอินนี้ต้องการเข้าถึงข้อมูลผู้ใช้ เลือกผู้ใช้ที่ต้องการให้ปลั๊กอินเข้าถึงหรือเปิดใช้งานกับผู้ใช้ทั้งหมด",
+        "allLibrariesHelp": "เมื่อเปิดใช้งาน ปลั๊กอินจะเข้าถึงทุกห้องสมุดเพลง รวมถึงของผู้ใช้ใหม่ในอนาคต",
+        "noLibraries": "ไม่มีห้องสมุดเพลงถูกเลือก",
+        "librariesRequired": "ปลั๊กอินนี้ต้องการเข้าถึงข้อมูลห้องสมุดเพลง เลือกห้องสมุดเพลงที่ต้องการให้ปลั๊กอินเข้าถึงหรือเปิดใช้งานกับห้องสมุดเพลงทั้งหมด",
+        "requiredHosts": "ต้องการ Host",
+        "configValidationError": "การตั้งค่าเกิดความผิดพลาด",
+        "schemaRenderError": "ไม่สามารถแสดงหน้าจอการตั้งค่า อาจเกิดจากความผิดพลาดจากปลั๊กอิน",
+        "allowWriteAccessHelp": ""
+      },
+      "placeholders": {
+        "configKey": "คีย์",
+        "configValue": "ค่า"
+      }
+    }
+  },
+  "ra": {
+    "auth": {
+      "welcome1": "ขอบคุณที่ติดตั้ง Navidrome!",
+      "welcome2": "สร้างบัญชี Admin เพื่อเริ่มใช้งาน",
+      "confirmPassword": "ยืนยันรหัสผ่าน",
+      "buttonCreateAdmin": "สร้างบัญชี Admin",
+      "auth_check_error": "กรุณาลงชื่อเข้าใช้เพื่อดำเนินการต่อ",
+      "user_menu": "โปรไฟล์",
+      "username": "ชื่อผู้ใช้",
+      "password": "รหัสผ่าน",
+      "sign_in": "เข้าสู่ระบบ",
+      "sign_in_error": "การยืนยันตัวตนล้มเหลว โปรดลองอีกครั้ง",
+      "logout": "ลงชื่อออก",
+      "insightsCollectionNote": "Navidrome เก็บข้อมูลการใช้ที่ไม่ระบุตัวตน\nเพื่อนำไปปรับปรุงโปรแกรม\nกดที่นี่ [here] เพื่อเรียนรู้เพิ่มเติม"
+    },
+    "validation": {
+      "invalidChars": "กรุณาใช้ตัวอักษรภาษาอังกฤษและตัวเลขเท่านั้น",
+      "passwordDoesNotMatch": "รหัสผ่านไม่ตรงกัน",
+      "required": "ต้องการ",
+      "minLength": "ต้องมี %{min} ตัวอักษรเป็นอย่างน้อย",
+      "maxLength": "มีได้มากสุด %{max} ตัวอักษร",
+      "minValue": "ต้องมีอย่างน้อย %{min}",
+      "maxValue": "มีได้มากสุด %{max}",
+      "number": "เป็นตัวเลขเท่านั้น",
+      "email": "เป็นอีเมลที่ถูกต้องเท่านั้น",
+      "oneOf": "ต้องเป็นหนึ่งใน %{options}",
+      "regex": "ต้องเป็นฟอร์แมตเฉพาะ (regexp): %{pattern}",
+      "unique": "ต้องมีความพิเศษ",
+      "url": "ต้องเป็น URL ที่ถูกต้อง"
+    },
+    "action": {
+      "add_filter": "เพิ่มตัวกรอง",
+      "add": "เพิ่ม",
+      "back": "ย้อนกลับ",
+      "bulk_actions": "เลือก %{smart_count} ไฟล์",
+      "cancel": "ยกเลิก",
+      "clear_input_value": "ล้างค่า",
+      "clone": "ทำสำเนา",
+      "confirm": "ยืนยัน",
+      "create": "สร้าง",
+      "delete": "ลบ",
+      "edit": "แก้ไข",
+      "export": "ส่งออก",
+      "list": "รายชื่อ",
+      "refresh": "รีเฟรช",
+      "remove_filter": "ลบตัวกรองนี้",
+      "remove": "ลบ",
+      "save": "บันทึก",
+      "search": "ค้นหา",
+      "show": "แสดง",
+      "sort": "เรียงลำดับ",
+      "undo": "เลิกทำ",
+      "expand": "ขยาย",
+      "close": "ปิด",
+      "open_menu": "เปิดเมนู",
+      "close_menu": "ปิดเมนู",
+      "unselect": "ยกเลิก",
+      "skip": "ข้าม",
+      "bulk_actions_mobile": "1 |||| %{smart_count}",
+      "share": "แบ่งปัน",
+      "download": "ดาวน์โหลด"
+    },
+    "boolean": {
+      "true": "ใช่",
+      "false": "ไม่"
+    },
+    "page": {
+      "create": "สร้าง %{name}",
+      "dashboard": "แดชบอร์ด",
+      "edit": "%{name} #%{id}",
+      "error": "มีบางอย่างผิดพลาด",
+      "list": "%{name}",
+      "loading": "กำลังโหลด",
+      "not_found": "ไม่พบ",
+      "show": "%{name} #%{id}",
+      "empty": "ยังไม่มี %{name}",
+      "invite": "ต้องการที่จะเพิ่มหรือไม่?"
+    },
+    "input": {
+      "file": {
+        "upload_several": "ลากแล้ววางหรือเลือกไฟล์เพื่ออัปโหลด",
+        "upload_single": "ลากแล้ววางหรือเลือกไฟล์เพื่ออัปโหลด"
+      },
+      "image": {
+        "upload_several": "ลากแล้ววางหรือเลือกรูปภาพเพื่ออัปโหลด",
+        "upload_single": "ลากแล้ววางหรือเลือกรูปภาพเพื่ออัปโหลด"
+      },
+      "references": {
+        "all_missing": "ไม่สามารถหาข้อมูลได้",
+        "many_missing": "ข้อมูลสูญหายหลายรายการ",
+        "single_missing": "ข้อมูลสูญหาย"
+      },
+      "password": {
+        "toggle_visible": "ซ่อนรหัสผ่าน",
+        "toggle_hidden": "แสดงรหัสผ่าน"
+      }
+    },
+    "message": {
+      "about": "เกี่ยวกับ",
+      "are_you_sure": "คุณแน่ใจหรือไม่?",
+      "bulk_delete_content": "คุณแน่ใจที่จะลบ %{name}? |||| คุณแน่ใจที่จะลบข้อมูล %{smart_count} เหล่านี้?",
+      "bulk_delete_title": "ลบ %{name} |||| ลบ %{smart_count} %{name}",
+      "delete_content": "คุณแน่ใจที่จะลบข้อมูลนี้?",
+      "delete_title": "ลบ %{name} #%{id}",
+      "details": "รายละเอียด",
+      "error": "เกิดข้อผิดพลาดที่ลูกข่าย ไม่สามารถดำเนินการคำขอของท่านได้",
+      "invalid_form": "แบบฟอร์มไม่ถูกต้อง กรุณาตรวจสอบข้อผิดพลาด",
+      "loading": "กำลังโหลดหน้านี้ โปรดรอสักครู่",
+      "no": "ไม่",
+      "not_found": "URL ผิดพลาดหรือลิงค์ไม่ทำงาน",
+      "yes": "ใช่",
+      "unsaved_changes": "การเปลี่ยนแปลงของท่านบางส่วนจะไม่ถูกบันทึก คุณแน่ใจหรือไม่?"
+    },
+    "navigation": {
+      "no_results": "ไม่พบผลการค้นหา",
+      "no_more_results": "หน้าที่ %{page} เกินขีดจำกัดแล้ว กรุณาลองหน้าก่อนหน้า",
+      "page_out_of_boundaries": "หน้าที่ %{page} เกินจำนวนหน้าสูงสุด",
+      "page_out_from_end": "ไม่สามารถไปต่อจากหน้าสุดท้ายได้",
+      "page_out_from_begin": "ไม่สามารถไปก่อนหน้าที่ 1 ได้",
+      "page_range_info": "%{offsetBegin}-%{offsetEnd} จาก %{total}",
+      "page_rows_per_page": "จำนวนในหนึ่งหน้า:",
+      "next": "ถัดไป",
+      "prev": "ก่อนหน้า",
+      "skip_nav": "ข้ามไปยังเนื้อหา"
+    },
+    "notification": {
+      "updated": "อัพเดตองค์ประกอบเรียบร้อย |||| %{smart_count} องค์ประกอบถูกอัพเดตเรียบร้อย",
+      "created": "สร้างองค์ประกอบแล้ว",
+      "deleted": "ลบองค์ประกอบเสร็จสิ้น |||| องค์ลบ %{smart_count} องค์ประกอบเสร็จสิ้น",
+      "bad_item": "องค์ประกอบไม่ถูกต้อง",
+      "item_doesnt_exist": "ไม่มีองค์ประกอบนี้อยู่",
+      "http_error": "การเชื่อมต่อเซิฟเวอร์ผิดพลาด",
+      "data_provider_error": "dataProviderผิดพลาด โปรดตรวจสอบคอนโซลเพื่อดูรายละเอียด",
+      "i18n_error": "ไม่สามารถเรียกคำแปลของภาษาที่เลือกได้",
+      "canceled": "ยกเลิกการกระทำแล้ว",
+      "logged_out": "เซสชั่นของท่านสิ้นสุดแล้ว โปรดเชื่อมต่ออีกครั้ง",
+      "new_version": "มีเวอร์ชั่นใหม่! กรุณารีเฟรชหน้าจอนี้"
+    },
+    "toggleFieldsMenu": {
+      "columnsToDisplay": "แสดงคอลัมน์",
+      "layout": "เลย์เอ้าท์",
+      "grid": "แบบรูปภาพ",
+      "table": "แบบตาราง"
+    }
+  },
+  "message": {
+    "note": "หมายเหตุ",
+    "transcodingDisabled": "การตั้งค่าในการแปลงไฟล์บนเว็บไซต์ถูกปิดเพื่อความปลอดภัย หากต้องการเปลี่ยนแปลงการตั้งค่า (แก้ไขหรือเพิ่ม) ให้ใช้ %{config} ในอ๊อฟชั่นในไฟล์คอนฟิก จากนั้นจึงรีสตาร์ทเซิฟเวอร์",
+    "transcodingEnabled": "Navidrome กำลังทำงานโดยใช้ %{config} ทำให้สามารถใช้งานคำสั่งของ ระบบจากตั้งค่าการแปลงไฟล์ บนหน้าเว็บได้ ทางเราแนะนำให้ท่านปิดการตั้งค่านี้เพื่อความปลอดภัย และเปิดเมื่อต้องการแก้ไขตั้งค่าการแปลงไฟล์เท่านั้น",
+    "songsAddedToPlaylist": "เลือก %{smart_count} เพลงเข้าในเพลย์ลิสต์",
+    "noPlaylistsAvailable": "ไม่มีเพลย์ลิสต์",
+    "delete_user_title": "ลบชื่อผู้ใช้ '%{name}'",
+    "delete_user_content": "คุณแน่ใจที่จะลบชื่อผู้ใช้นี้และข้อมูลทั้งหมด (รวมถึงเพลย์ลิสต์และการตั้งค่าต่างๆ)?",
+    "notifications_blocked": "คุณบล็อกการแจ้งเตือนสำหรับเว็บไซต์นี้",
+    "notifications_not_available": "เบราเซอร์นี้ไม่รองรับการแจ้งเตือน Desktop หรือคุณไม่ได้เข้าถึง Navidrome ผ่าน https",
+    "lastfmLinkSuccess": "เชื่อมต่อ Last.fm สำเร็จและเปิดการ Scrobble",
+    "lastfmLinkFailure": "ไม่สามารถเชื่อมต่อ Last.fm ได้",
+    "lastfmUnlinkSuccess": "ยกเลิกการเชื่อมต่อ Last.fm สำเร็จและปิดการ Scrobble แล้ว",
+    "lastfmUnlinkFailure": "ไม่สามารถยกเลิกการเชิ่อมต่อกับ Last.fm ได้",
+    "openIn": {
+      "lastfm": "เปิดใน Last.fm",
+      "musicbrainz": "เปิดใน MusicBrainz"
+    },
+    "lastfmLink": "อ่านต่อ...",
+    "listenBrainzLinkSuccess": "เชื่อมต่อ ListenBrainz สำเร็จ และสามารถใช้ Scrobbling ได้ผ่านชื่อผู้ใช้ %{user}",
+    "listenBrainzLinkFailure": "ไม่สามารถเชื่อมต่อ ListenBrainz ได้: %{error}",
+    "listenBrainzUnlinkSuccess": "ยกเลิกเชื่อมต่อ ListenBrainz และ scrobbling ใช้งานไม่ได้",
+    "listenBrainzUnlinkFailure": "ไม่สามารถยกเลิกเชื่อมต่อ ListenBrainz ได้",
+    "downloadOriginalFormat": "ดาวโหลดไฟล์ต้นฉบับ",
+    "shareOriginalFormat": "แบ่งปันไฟล์ต้นฉบับ",
+    "shareDialogTitle": "แบ่งปัน %{resource} '%{name}'",
+    "shareBatchDialogTitle": "แบ่งปัน 1 %{resource} |||| แบ่งปัน %{smart_count} %{resource}",
+    "shareSuccess": "คัดลอก URL ไปคลิปบอร์ด: %{url}",
+    "shareFailure": "คัดลอก URL %{url} ไปคลิปบอร์ดผิดพลาด",
+    "downloadDialogTitle": "ดาวโหลด %{resource} '%{name}' (%{size})",
+    "shareCopyToClipboard": "คัดลอกไปคลิปบอร์ด: Ctrl+C, Enter",
+    "remove_missing_title": "ลบรายการไฟล์ที่หายไป",
+    "remove_missing_content": "คุณแน่ใจว่าจะเอารายการไฟล์ที่หายไปออกจากดาต้าเบส นี่จะเป็นการลบข้อมูลอ้างอิงทั้งหมดของไฟล์ออกอย่างถาวร",
+    "remove_all_missing_title": "เอารายการไฟล์ที่หายไปออกทั้งหมด",
+    "remove_all_missing_content": "คุณแน่ใจว่าจะเอารายการไฟล์ที่หายไปออกจากดาต้าเบส นี่จะเป็นการลบข้อมูลอ้างอิงทั้งหมดของไฟล์ออกอย่างถาวร",
+    "noSimilarSongsFound": "ไม่มีเพลงคล้ายกัน",
+    "noTopSongsFound": "ไม่พบเพลงยอดนิยม",
+    "startingInstantMix": "กำลังโหลดอินสแตนท์ มิก..."
+  },
+  "menu": {
+    "library": "ห้องสมุดเพลง",
+    "settings": "ตั้งค่า",
+    "version": "เวอร์ชั่น",
+    "theme": "ธีม",
+    "personal": {
+      "name": "ปรับแต่ง",
+      "options": {
+        "theme": "ธีม",
+        "language": "ภาษา",
+        "defaultView": "หน้าเริ่มต้น",
+        "desktop_notifications": "การแจ่งเตือน Desktop",
+        "lastfmScrobbling": "Scrobble ไปยัง Last.fm",
+        "listenBrainzScrobbling": "Scrobble ไปยัง ListenBrainz",
+        "replaygain": "โหมด ReplayGain",
+        "preAmp": "ReplayGain PreAmp (dB)",
+        "gain": {
+          "none": "ปิดการใช้งาน",
+          "album": "ใช้อัลบั้ม Gain",
+          "track": "ใช้แทรค Gain"
+        },
+        "lastfmNotConfigured": "ยังไม่ได้ตั้งค่า Last.fm API-Key"
+      }
+    },
+    "albumList": "อัลบั้ม",
+    "about": "เกี่ยวกับ",
+    "playlists": "เพลย์ลิสต์",
+    "sharedPlaylists": "เพลย์ลิสต์ที่แบ่งปัน",
+    "librarySelector": {
+      "allLibraries": "ห้องสมุด (%{count}) ห้อง",
+      "multipleLibraries": "%{selected} ของ %{total} ห้องสมุด",
+      "selectLibraries": "เลือกห้องสมุด",
+      "none": "ไม่มี"
+    }
+  },
+  "player": {
+    "playListsText": "คิวเล่น",
+    "openText": "เปิด",
+    "closeText": "ปิด",
+    "notContentText": "ไม่มีเพลง",
+    "clickToPlayText": "คลิกเพื่อเล่น",
+    "clickToPauseText": "คลิกเพื่อหยุด",
+    "nextTrackText": "เพลงถัดไป",
+    "previousTrackText": "เพลงก่อนหน้า",
+    "reloadText": "โหลดอีกครั้ง",
+    "volumeText": "ระดับเสียง",
+    "toggleLyricText": "เปิดปิดเนื้อเพลง",
+    "toggleMiniModeText": "ย่อ",
+    "destroyText": "ลบ",
+    "downloadText": "ดาวน์โหลด",
+    "removeAudioListsText": "ลบรายการเพลง",
+    "clickToDeleteText": "คลิกเพื่อลบ %{name}",
+    "emptyLyricText": "ไม่มีเนื้อเพลง",
+    "playModeText": {
+      "order": "ตามลำดับ",
+      "orderLoop": "เล่นซ้ำ",
+      "singleLoop": "เล่นซ้ำเพลงนี้",
+      "shufflePlay": "เล่นแบบสุ่ม"
+    }
+  },
+  "about": {
+    "links": {
+      "homepage": "โฮมเพจ",
+      "source": "ต้นฉบับซอฟต์แวร์",
+      "featureRequests": "ร้องขอฟีเจอร์",
+      "lastInsightsCollection": "เก็บข้อมูลล่าสุด",
+      "insights": {
+        "disabled": "ปิดการทำงาน",
+        "waiting": "รอ"
+      }
+    },
+    "tabs": {
+      "about": "เกี่ยวกับ",
+      "config": "การตั้งค่า"
+    },
+    "config": {
+      "configName": "ชื่อการตั้งค่า",
+      "environmentVariable": "ค่าทั่วไป",
+      "currentValue": "ค่าปัจจุบัน",
+      "configurationFile": "ไฟล์การตั้งค่า",
+      "exportToml": "นำออกการตั้งค่า (TOML)",
+      "exportSuccess": "นำออกการตั้งค่าไปยังคลิปบอร์ดในรูปแบบ TOML แล้ว",
+      "exportFailed": "คัดลอกการตั้งค่าล้มเหลว",
+      "devFlagsHeader": "ปักธงการพัฒนา (อาจมีการเปลี่ยน/เอาออก)",
+      "devFlagsComment": "การตั้งค่านี้อยู่ในช่วงทดลองและอาจจะมีการเอาออกในเวอร์ชั่นหลัง",
+      "downloadToml": "ดาวน์โหลดการตั้งค่า (TOML)"
+    }
+  },
+  "activity": {
+    "title": "กิจกรรม",
+    "totalScanned": "โฟลเดอร์ทั้งหมด",
+    "quickScan": "สแกนแบบเร็ว",
+    "fullScan": "สแกนทั้งหมด",
+    "serverUptime": "เซิร์ฟเวอร์ออนไลน์นาน",
+    "serverDown": "ออฟไลน์",
+    "scanType": "ประเภท",
+    "status": "สแกนผิดพลาด",
+    "elapsedTime": "เวลาที่ใช้",
+    "selectiveScan": "เลือก"
+  },
+  "help": {
+    "title": "คีย์ลัด Navidrome",
+    "hotkeys": {
+      "show_help": "แสดงความช่วยเหลือ",
+      "toggle_menu": "ปิดเปิด เมนูข้าง",
+      "toggle_play": "เล่น/หยุดชั่วคราว",
+      "prev_song": "เพลงก่อนหน้า",
+      "next_song": "เพลงถัดไป",
+      "vol_up": "เพิ่มเสียง",
+      "vol_down": "ลดเสียง",
+      "toggle_love": "เพิ่มเพลงนี้ไปยังรายการโปรด",
+      "current_song": "ไปยังเพลงปัจจุบัน"
+    }
+  },
+  "nowPlaying": {
+    "title": "กำลังเล่น",
+    "empty": "ไม่มีเพลงเล่น",
+    "minutesAgo": "%{smart_count} นาทีที่แล้ว |||| %{smart_count} นาทีที่แล้ว"
+  }
+}

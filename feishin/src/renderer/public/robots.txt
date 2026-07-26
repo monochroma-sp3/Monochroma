@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /rest/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /app/
+
+Sitemap: https://monochroma.cc/sitemap.xml

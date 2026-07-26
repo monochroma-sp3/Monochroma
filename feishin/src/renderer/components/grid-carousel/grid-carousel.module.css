@@ -1,0 +1,88 @@
+.grid-carousel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-md);
+    width: 100%;
+    margin: 0 auto;
+    container-name: grid-carousel;
+    container-type: inline-size;
+}
+
+.navigation {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    touch-action: pan-x;
+    cursor: grab;
+    user-select: none;
+}
+
+.navigation:active {
+    cursor: grabbing;
+}
+
+.custom-title-container {
+    display: flex;
+    gap: var(--theme-spacing-sm);
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.custom-title-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.grid-carousel-viewport {
+    width: 100%;
+    min-height: 0;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cards-to-show, 2), minmax(0, 1fr));
+    gap: var(--theme-spacing-md);
+    contain: layout paint;
+    overflow: hidden;
+    will-change: transform;
+}
+
+.card {
+    min-height: 0;
+}
+
+.page-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--theme-spacing-sm) 0;
+    cursor: grab;
+    user-select: none;
+}
+
+.page-indicator:active {
+    cursor: grabbing;
+}
+
+.indicator-track {
+    width: 20px;
+    height: 4px;
+    touch-action: none;
+    cursor: grab;
+    border-radius: 2px;
+
+    @mixin light {
+        background-color: darken(var(--theme-colors-background), 10%);
+    }
+
+    @mixin dark {
+        background-color: lighten(var(--theme-colors-background), 15%);
+    }
+}
+
+.indicator-track:active {
+    cursor: grabbing;
+}

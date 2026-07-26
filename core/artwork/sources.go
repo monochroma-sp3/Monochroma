@@ -1,0 +1,217 @@
+package artwork
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
+	"reflect"
+	"regexp"
+	"runtime"
+	"strings"
+	"time"
+
+	"github.com/navidrome/navidrome/consts"
+	"github.com/navidrome/navidrome/core/external"
+	"github.com/navidrome/navidrome/core/ffmpeg"
+	"github.com/navidrome/navidrome/log"
+	"github.com/navidrome/navidrome/model"
+	"github.com/navidrome/navidrome/resources"
+	"go.senan.xyz/taglib"
+)
+
+func selectImageReader(ctx context.Context, artID model.ArtworkID, extractFuncs ...sourceFunc) (io.ReadCloser, string, error) {
+	for _, f := range extractFuncs {
+		if ctx.Err() != nil {
+			return nil, "", ctx.Err()
+		}
+		start := time.Now()
+		r, path, err := f()
+		if r != nil {
+			msg := fmt.Sprintf("Found %s artwork", artID.Kind)
+			log.Debug(ctx, msg, "artID", artID, "path", path, "source", f, "elapsed", time.Since(start))
+			return r, path, nil
+		}
+		log.Trace(ctx, "Failed trying to extract artwork", "artID", artID, "source", f, "elapsed", time.Since(start), err)
+	}
+	return nil, "", fmt.Errorf("could not get `%s` cover art for %s: %w", artID.Kind, artID, ErrUnavailable)
+}
+
+type sourceFunc func() (r io.ReadCloser, path string, err error)
+
+func (f sourceFunc) String() string {
+	name := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+	name = strings.TrimPrefix(name, "github.com/navidrome/navidrome/core/artwork.")
+	if _, after, found := strings.Cut(name, ")."); found {
+		name = after
+	}
+	name = strings.TrimSuffix(name, ".func1")
+	return name
+}
+
+func fromExternalFile(ctx context.Context, files []string, pattern string) sourceFunc {
+	return func() (io.ReadCloser, string, error) {
+		for _, file := range files {
+			_, name := filepath.Split(file)
+			match, err := filepath.Match(pattern, strings.ToLower(name))
+			if err != nil {
+				log.Warn(ctx, "Error matching cover art file to pattern", "pattern", pattern, "file", file)
+				continue
+			}
+			if !match {
+				continue
+			}
+			f, err := os.Open(file)
+			if err != nil {
+				log.Warn(ctx, "Could not open cover art file", "file", file, err)
+				continue
+			}
+			return f, file, err
+		}
+		return nil, "", fmt.Errorf("pattern '%s' not matched by files %v", pattern, files)
+	}
+}
+
+// These regexes are used to match the picture type in the file, in the order they are listed.
+var picTypeRegexes = []*regexp.Regexp{
+	regexp.MustCompile(`(?i).*cover.*front.*|.*front.*cover.*`),
+	regexp.MustCompile(`(?i).*front.*`),
+	regexp.MustCompile(`(?i).*cover.*`),
+}
+
+func fromTag(ctx context.Context, path string) sourceFunc {
+	return func() (io.ReadCloser, string, error) {
+		if path == "" {
+			return nil, "", nil
+		}
+		f, err := taglib.OpenReadOnly(path, taglib.WithReadStyle(taglib.ReadStyleFast))
+		if err != nil {
+			return nil, "", err
+		}
+		defer f.Close()
+
+		images := f.Properties().Images
+		if len(images) == 0 {
+			return nil, "", fmt.Errorf("no embedded image found in %s", path)
+		}
+
+		imageIndex := findBestImageIndex(ctx, images, path)
+		data, err := f.Image(imageIndex)
+		if err != nil || len(data) == 0 {
+			return nil, "", fmt.Errorf("could not load embedded image from %s", path)
+		}
+		return io.NopCloser(bytes.NewReader(data)), path, nil
+	}
+}
+
+func findBestImageIndex(ctx context.Context, images []taglib.ImageDesc, path string) int {
+	for _, regex := range picTypeRegexes {
+		for i, img := range images {
+			if regex.MatchString(img.Type) {
+				log.Trace(ctx, "Found embedded image", "type", img.Type, "path", path)
+				return i
+			}
+		}
+	}
+	log.Trace(ctx, "Could not find a front image. Getting the first one", "type", images[0].Type, "path", path)
+	return 0
+}
+
+func fromFFmpegTag(ctx context.Context, ffmpeg ffmpeg.FFmpeg, path string) sourceFunc {
+	return func() (io.ReadCloser, string, error) {
+		if path == "" {
+			return nil, "", nil
+		}
+		r, err := ffmpeg.ExtractImage(ctx, path)
+		if err != nil {
+			return nil, "", err
+		}
+		// Validate that the stream actually contains image data by reading the first byte.
+		// ffmpeg.ExtractImage returns a pipe reader that may fail asynchronously if the
+		// file has no video/image stream (e.g., an MP3 without embedded art).
+		buf := make([]byte, 1)
+		n, err := r.Read(buf)
+		if n == 0 || err != nil {
+			r.Close()
+			return nil, "", fmt.Errorf("ffmpeg produced no image data for %s: %w", path, err)
+		}
+		return readCloser{Reader: io.MultiReader(bytes.NewReader(buf[:n]), r), Closer: r}, path, nil
+	}
+}
+
+// readCloser combines a Reader and a Closer into an io.ReadCloser.
+type readCloser struct {
+	io.Reader
+	io.Closer
+}
+
+func fromAlbum(ctx context.Context, a *artwork, id model.ArtworkID) sourceFunc {
+	return func() (io.ReadCloser, string, error) {
+		r, _, err := a.Get(ctx, id, 0, false)
+		if err != nil {
+			return nil, "", err
+		}
+		return r, id.String(), nil
+	}
+}
+
+func fromAlbumPlaceholder() sourceFunc {
+	return func() (io.ReadCloser, string, error) {
+		r, _ := resources.FS().Open(consts.PlaceholderAlbumArt)
+		return r, consts.PlaceholderAlbumArt, nil
+	}
+}
+func fromArtistExternalSource(ctx context.Context, ar model.Artist, provider external.Provider) sourceFunc {
+	return func() (io.ReadCloser, string, error) {
+		imageUrl, err := provider.ArtistImage(ctx, ar.ID)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return fromURL(ctx, imageUrl)
+	}
+}
+
+func fromAlbumExternalSource(ctx context.Context, al model.Album, provider external.Provider) sourceFunc {
+	return func() (io.ReadCloser, string, error) {
+		imageUrl, err := provider.AlbumImage(ctx, al.ID)
+		if err != nil {
+			return nil, "", err
+		}
+
+		return fromURL(ctx, imageUrl)
+	}
+}
+
+func fromURL(ctx context.Context, imageUrl *url.URL) (io.ReadCloser, string, error) {
+	// http.Client.Timeout covers body reads too, so a 5s cap was truncating
+	// larger Tidal covers mid-JPEG ("short Huffman data"). Use 30s for the
+	// full cycle — still a bound, just one realistic for ~1MB covers on a
+	// slow CDN.
+	hc := http.Client{Timeout: 30 * time.Second}
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, imageUrl.String(), nil)
+	req.Header.Set("User-Agent", consts.HTTPUserAgent)
+	resp, err := hc.Do(req) //nolint:gosec
+	if err != nil {
+		return nil, "", err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, "", fmt.Errorf("error retrieving artwork from %s: %s", imageUrl, resp.Status)
+	}
+	return resp.Body, imageUrl.String(), nil
+}
+
+func fromTidalAlbum(ctx context.Context, al model.Album) sourceFunc {
+	return func() (io.ReadCloser, string, error) {
+		imageUrl, err := url.Parse(al.LargeImageUrl)
+		if err != nil {
+			return nil, "", fmt.Errorf("invalid tidal album image url: %w", err)
+		}
+		return fromURL(ctx, imageUrl)
+	}
+}

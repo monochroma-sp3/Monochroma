@@ -1,0 +1,548 @@
+package ffmpeg
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync"
+
+	"github.com/navidrome/navidrome/conf"
+	"github.com/navidrome/navidrome/consts"
+	"github.com/navidrome/navidrome/log"
+)
+
+// TranscodeOptions contains all parameters for a transcoding operation.
+type TranscodeOptions struct {
+	Command    string // DB command template (used to detect custom vs default)
+	Format     string // Target format (mp3, opus, aac, flac)
+	FilePath   string
+	BitRate    int // kbps, 0 = codec default
+	SampleRate int // 0 = no constraint
+	Channels   int // 0 = no constraint
+	BitDepth   int // 0 = no constraint; valid values: 16, 24, 32
+	Offset     int // seconds
+}
+
+// AudioProbeResult contains authoritative audio stream properties from ffprobe.
+type AudioProbeResult struct {
+	Codec      string `json:"codec"`
+	Profile    string `json:"profile,omitempty"`
+	BitRate    int    `json:"bitRate"`
+	SampleRate int    `json:"sampleRate"`
+	BitDepth   int    `json:"bitDepth"`
+	Channels   int    `json:"channels"`
+}
+
+type FFmpeg interface {
+	Transcode(ctx context.Context, opts TranscodeOptions) (io.ReadCloser, error)
+	ExtractImage(ctx context.Context, path string) (io.ReadCloser, error)
+	ConvertAnimatedImage(ctx context.Context, reader io.Reader, maxSize int, quality int) (io.ReadCloser, error)
+	Probe(ctx context.Context, files []string) (string, error)
+	ProbeAudioStream(ctx context.Context, filePath string) (*AudioProbeResult, error)
+	CmdPath() (string, error)
+	IsAvailable() bool
+	IsProbeAvailable() bool
+	Version() string
+}
+
+func New() FFmpeg {
+	return &ffmpeg{}
+}
+
+const (
+	extractImageCmd     = "ffmpeg -i %s -map 0:v -map -0:V -vcodec copy -f image2pipe -"
+	probeCmd            = "ffmpeg %s -f ffmetadata"
+	probeAudioStreamCmd = "ffprobe -v quiet -select_streams a:0 -print_format json -show_streams -show_format %s"
+)
+
+type ffmpeg struct{}
+
+func (e *ffmpeg) Transcode(ctx context.Context, opts TranscodeOptions) (io.ReadCloser, error) {
+	if _, err := ffmpegCmd(); err != nil {
+		return nil, err
+	}
+	if err := fileExists(opts.FilePath); err != nil {
+		return nil, err
+	}
+	var args []string
+	if isDefaultCommand(opts.Format, opts.Command) {
+		args = buildDynamicArgs(opts)
+	} else {
+		args = buildTemplateArgs(opts)
+	}
+	return e.start(ctx, args)
+}
+
+func (e *ffmpeg) ConvertAnimatedImage(ctx context.Context, reader io.Reader, maxSize int, quality int) (io.ReadCloser, error) {
+	cmdPath, err := ffmpegCmd()
+	if err != nil {
+		return nil, err
+	}
+
+	args := []string{cmdPath, "-i", "pipe:0"}
+	if maxSize > 0 {
+		vf := fmt.Sprintf("scale='min(%d,iw)':'min(%d,ih)':force_original_aspect_ratio=decrease", maxSize, maxSize)
+		args = append(args, "-vf", vf)
+	}
+	args = append(args, "-loop", "0", "-c:v", "libwebp_anim",
+		"-quality", strconv.Itoa(quality), "-f", "webp", "-")
+
+	return e.start(ctx, args, reader)
+}
+
+func (e *ffmpeg) ExtractImage(ctx context.Context, path string) (io.ReadCloser, error) {
+	if _, err := ffmpegCmd(); err != nil {
+		return nil, err
+	}
+	if err := fileExists(path); err != nil {
+		return nil, err
+	}
+	args := createFFmpegCommand(extractImageCmd, path, 0, 0)
+	return e.start(ctx, args)
+}
+
+func fileExists(path string) error {
+	s, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if s.IsDir() {
+		return fmt.Errorf("'%s' is a directory", path)
+	}
+	return nil
+}
+
+func (e *ffmpeg) Probe(ctx context.Context, files []string) (string, error) {
+	if _, err := ffmpegCmd(); err != nil {
+		return "", err
+	}
+	args := createProbeCommand(probeCmd, files)
+	log.Trace(ctx, "Executing ffmpeg command", "args", args)
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...) // #nosec
+	output, _ := cmd.CombinedOutput()
+	return string(output), nil
+}
+
+func (e *ffmpeg) ProbeAudioStream(ctx context.Context, filePath string) (*AudioProbeResult, error) {
+	if _, err := ffmpegCmd(); err != nil {
+		return nil, err
+	}
+	if err := fileExists(filePath); err != nil {
+		return nil, err
+	}
+	args := createFFmpegCommand(probeAudioStreamCmd, filePath, 0, 0)
+	log.Trace(ctx, "Executing ffprobe command", "args", args)
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...) // #nosec
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("running ffprobe on %q: %w", filePath, err)
+	}
+	return parseProbeOutput(output)
+}
+
+type probeOutput struct {
+	Streams []probeStream `json:"streams"`
+	Format  probeFormat   `json:"format"`
+}
+
+type probeFormat struct {
+	BitRate string `json:"bit_rate"`
+}
+
+type probeStream struct {
+	CodecName        string `json:"codec_name"`
+	CodecType        string `json:"codec_type"`
+	Profile          string `json:"profile"`
+	SampleRate       string `json:"sample_rate"`
+	BitRate          string `json:"bit_rate"`
+	Channels         int    `json:"channels"`
+	BitsPerSample    int    `json:"bits_per_sample"`
+	BitsPerRawSample string `json:"bits_per_raw_sample"`
+}
+
+func parseProbeOutput(data []byte) (*AudioProbeResult, error) {
+	var output probeOutput
+	if err := json.Unmarshal(data, &output); err != nil {
+		return nil, fmt.Errorf("parsing ffprobe output: %w", err)
+	}
+
+	for _, s := range output.Streams {
+		if s.CodecType != "audio" {
+			continue
+		}
+		bitDepth := s.BitsPerSample
+		if bitDepth == 0 && s.BitsPerRawSample != "" {
+			bitDepth, _ = strconv.Atoi(s.BitsPerRawSample)
+		}
+		result := &AudioProbeResult{
+			Codec:    s.CodecName,
+			Channels: s.Channels,
+			BitDepth: bitDepth,
+		}
+
+		// Profile: "unknown" → empty
+		if s.Profile != "" && !strings.EqualFold(s.Profile, "unknown") {
+			result.Profile = s.Profile
+		}
+
+		// Sample rate: string → int
+		if s.SampleRate != "" {
+			result.SampleRate, _ = strconv.Atoi(s.SampleRate)
+		}
+
+		// Bit rate: bps string → kbps int
+		if s.BitRate != "" {
+			bps, _ := strconv.Atoi(s.BitRate)
+			result.BitRate = bps / 1000
+		}
+
+		// Fallback to format-level bit_rate (needed for FLAC, Opus, etc.)
+		if result.BitRate == 0 && output.Format.BitRate != "" {
+			bps, _ := strconv.Atoi(output.Format.BitRate)
+			result.BitRate = bps / 1000
+		}
+
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("no audio stream found in ffprobe output")
+}
+
+func (e *ffmpeg) CmdPath() (string, error) {
+	return ffmpegCmd()
+}
+
+func (e *ffmpeg) IsAvailable() bool {
+	_, err := ffmpegCmd()
+	return err == nil
+}
+
+func (e *ffmpeg) IsProbeAvailable() bool {
+	if _, err := ffmpegCmd(); err != nil {
+		return false
+	}
+	probeOnce.Do(func() {
+		probePath := ffprobePath(ffmpegPath)
+		if _, err := exec.LookPath(probePath); err == nil {
+			probeAvail = true
+		}
+	})
+	return probeAvail
+}
+
+// Version executes ffmpeg -version and extracts the version from the output.
+// Sample output: ffmpeg version 6.0 Copyright (c) 2000-2023 the FFmpeg developers
+func (e *ffmpeg) Version() string {
+	cmd, err := ffmpegCmd()
+	if err != nil {
+		return "N/A"
+	}
+	out, err := exec.Command(cmd, "-version").CombinedOutput() // #nosec
+	if err != nil {
+		return "N/A"
+	}
+	parts := strings.Split(string(out), " ")
+	if len(parts) < 3 {
+		return "N/A"
+	}
+	return parts[2]
+}
+
+func (e *ffmpeg) start(ctx context.Context, args []string, input ...io.Reader) (io.ReadCloser, error) {
+	log.Trace(ctx, "Executing ffmpeg command", "cmd", args)
+	j := &ffCmd{args: args}
+	if len(input) > 0 {
+		j.input = input[0]
+	}
+	j.PipeReader, j.out = io.Pipe()
+	err := j.start(ctx)
+	if err != nil {
+		return nil, err
+	}
+	go j.wait()
+	return j, nil
+}
+
+type ffCmd struct {
+	*io.PipeReader
+	out    *io.PipeWriter
+	args   []string
+	cmd    *exec.Cmd
+	input  io.Reader // optional stdin source
+	stderr *bytes.Buffer
+}
+
+func (j *ffCmd) start(ctx context.Context) error {
+	cmd := exec.CommandContext(ctx, j.args[0], j.args[1:]...) // #nosec
+	cmd.Stdout = j.out
+	if j.input != nil {
+		cmd.Stdin = j.input
+	}
+	j.stderr = &bytes.Buffer{}
+	stderrWriter := &limitedWriter{buf: j.stderr, limit: 4096}
+	if log.IsGreaterOrEqualTo(log.LevelTrace) {
+		cmd.Stderr = io.MultiWriter(os.Stderr, stderrWriter)
+	} else {
+		cmd.Stderr = stderrWriter
+	}
+	j.cmd = cmd
+
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("starting cmd: %w", err)
+	}
+	return nil
+}
+
+func (j *ffCmd) wait() {
+	if err := j.cmd.Wait(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			errMsg := fmt.Sprintf("%s exited with non-zero status code: %d", j.args[0], exitErr.ExitCode())
+			if stderrOutput := strings.TrimSpace(j.stderr.String()); stderrOutput != "" {
+				errMsg += ": " + stderrOutput
+			}
+			_ = j.out.CloseWithError(errors.New(errMsg))
+		} else {
+			_ = j.out.CloseWithError(fmt.Errorf("waiting %s cmd: %w", j.args[0], err))
+		}
+		return
+	}
+	_ = j.out.Close()
+}
+
+// limitedWriter wraps a bytes.Buffer and stops writing once the limit is reached.
+// Writes that would exceed the limit are silently discarded to prevent unbounded memory usage.
+type limitedWriter struct {
+	buf   *bytes.Buffer
+	limit int
+}
+
+func (w *limitedWriter) Write(p []byte) (int, error) {
+	n := len(p)
+	remaining := w.limit - w.buf.Len()
+	if remaining <= 0 {
+		return n, nil // Discard but report success to avoid breaking the writer
+	}
+	if len(p) > remaining {
+		p = p[:remaining]
+	}
+	w.buf.Write(p)
+	return n, nil // Always report full write to avoid ErrShortWrite from io.MultiWriter
+}
+
+// formatCodecMap maps target format to ffmpeg codec flag.
+var formatCodecMap = map[string]string{
+	"mp3":  "libmp3lame",
+	"opus": "libopus",
+	"aac":  "aac",
+	"flac": "flac",
+}
+
+// formatOutputMap maps target format to ffmpeg output format flag (-f).
+var formatOutputMap = map[string]string{
+	"mp3":  "mp3",
+	"opus": "opus",
+	"aac":  "adts",
+	"flac": "flac",
+}
+
+// defaultCommands is used to detect whether a user has customized their transcoding command.
+var defaultCommands = func() map[string]string {
+	m := make(map[string]string, len(consts.DefaultTranscodings))
+	for _, t := range consts.DefaultTranscodings {
+		m[t.TargetFormat] = t.Command
+	}
+	return m
+}()
+
+// isDefaultCommand returns true if the command matches the known default for this format.
+func isDefaultCommand(format, command string) bool {
+	return defaultCommands[format] == command
+}
+
+// buildDynamicArgs programmatically constructs ffmpeg arguments for known formats,
+// including all transcoding parameters (bitrate, sample rate, channels).
+func buildDynamicArgs(opts TranscodeOptions) []string {
+	cmdPath, _ := ffmpegCmd()
+	args := []string{cmdPath, "-i", opts.FilePath}
+
+	if opts.Offset > 0 {
+		args = append(args, "-ss", strconv.Itoa(opts.Offset))
+	}
+
+	args = append(args, "-map", "0:a:0")
+
+	if codec, ok := formatCodecMap[opts.Format]; ok {
+		args = append(args, "-c:a", codec)
+	}
+
+	if opts.BitRate > 0 {
+		args = append(args, "-b:a", strconv.Itoa(opts.BitRate)+"k")
+	}
+	args = injectDynamicAudioFlags(args, opts)
+
+	args = append(args, "-v", "0")
+
+	if outputFmt, ok := formatOutputMap[opts.Format]; ok {
+		args = append(args, "-f", outputFmt)
+	}
+
+	args = append(args, "-")
+	return args
+}
+
+// buildTemplateArgs handles user-customized command templates, with dynamic injection
+// of sample rate, channels, and bit depth when requested by the transcode decision.
+// Values in opts have already been clamped to codec limits upstream (see
+// core/stream/codec.go codecMax* helpers), so injecting them unconditionally is safe —
+// ffmpeg honors the last occurrence of a duplicate flag.
+func buildTemplateArgs(opts TranscodeOptions) []string {
+	args := createFFmpegCommand(opts.Command, opts.FilePath, opts.BitRate, opts.Offset)
+	return injectDynamicAudioFlags(args, opts)
+}
+
+// injectDynamicAudioFlags appends -ar, -ac, and -sample_fmt flags based on opts.
+// Only passes -sample_fmt for lossless output formats where bit depth matters:
+// lossy codecs (mp3, aac, opus) handle sample format conversion internally, and
+// passing interleaved formats like "s16" causes silent failures.
+func injectDynamicAudioFlags(args []string, opts TranscodeOptions) []string {
+	if opts.SampleRate > 0 {
+		args = injectBeforeOutput(args, "-ar", strconv.Itoa(opts.SampleRate))
+	}
+	if opts.Channels > 0 {
+		args = injectBeforeOutput(args, "-ac", strconv.Itoa(opts.Channels))
+	}
+	if opts.BitDepth >= 16 && isLosslessOutputFormat(opts.Format) {
+		args = injectBeforeOutput(args, "-sample_fmt", bitDepthToSampleFmt(opts.BitDepth))
+	}
+	return args
+}
+
+// injectBeforeOutput inserts a flag and value before the trailing "-" (stdout output).
+func injectBeforeOutput(args []string, flag, value string) []string {
+	if len(args) > 0 && args[len(args)-1] == "-" {
+		result := make([]string, 0, len(args)+2)
+		result = append(result, args[:len(args)-1]...)
+		result = append(result, flag, value, "-")
+		return result
+	}
+	return append(args, flag, value)
+}
+
+// isLosslessOutputFormat returns true if the format is a lossless audio format
+// where preserving bit depth via -sample_fmt is meaningful.
+// Note: this covers only formats ffmpeg can produce as output. For the full set of
+// lossless formats used in transcoding decisions, see core/stream/codec.go:isLosslessFormat.
+func isLosslessOutputFormat(format string) bool {
+	switch strings.ToLower(format) {
+	case "flac", "alac", "wav", "aiff":
+		return true
+	}
+	return false
+}
+
+// bitDepthToSampleFmt converts a bit depth value to the ffmpeg sample_fmt string.
+// FLAC only supports s16 and s32; for 24-bit sources, s32 is the correct format
+// (ffmpeg packs 24-bit samples into 32-bit containers).
+func bitDepthToSampleFmt(bitDepth int) string {
+	switch bitDepth {
+	case 16:
+		return "s16"
+	case 32:
+		return "s32"
+	default:
+		// 24-bit and other depths: use s32 (the next valid container size)
+		return "s32"
+	}
+}
+
+// Path will always be an absolute path
+func createFFmpegCommand(cmd, path string, maxBitRate, offset int) []string {
+	var args []string
+	for _, s := range fixCmd(cmd) {
+		if strings.Contains(s, "%s") {
+			s = strings.ReplaceAll(s, "%s", path)
+			args = append(args, s)
+			if offset > 0 && !strings.Contains(cmd, "%t") {
+				args = append(args, "-ss", strconv.Itoa(offset))
+			}
+		} else {
+			s = strings.ReplaceAll(s, "%t", strconv.Itoa(offset))
+			s = strings.ReplaceAll(s, "%b", strconv.Itoa(maxBitRate))
+			args = append(args, s)
+		}
+	}
+	return args
+}
+
+func createProbeCommand(cmd string, inputs []string) []string {
+	var args []string
+	for _, s := range fixCmd(cmd) {
+		if s == "%s" {
+			for _, inp := range inputs {
+				args = append(args, "-i", inp)
+			}
+		} else {
+			args = append(args, s)
+		}
+	}
+	return args
+}
+
+func fixCmd(cmd string) []string {
+	split := strings.Fields(cmd)
+	cmdPath, _ := ffmpegCmd()
+	for i, s := range split {
+		if s == "ffmpeg" || s == "ffmpeg.exe" {
+			split[i] = cmdPath
+		}
+		if s == "ffprobe" || s == "ffprobe.exe" {
+			split[i] = ffprobePath(cmdPath)
+		}
+	}
+	return split
+}
+
+// ffprobePath derives the ffprobe binary path from the resolved ffmpeg path.
+func ffprobePath(ffmpegCmd string) string {
+	dir := filepath.Dir(ffmpegCmd)
+	base := filepath.Base(ffmpegCmd)
+	return filepath.Join(dir, strings.Replace(base, "ffmpeg", "ffprobe", 1))
+}
+
+func ffmpegCmd() (string, error) {
+	ffOnce.Do(func() {
+		if conf.Server.FFmpegPath != "" {
+			ffmpegPath = conf.Server.FFmpegPath
+			ffmpegPath, ffmpegErr = exec.LookPath(ffmpegPath)
+		} else {
+			ffmpegPath, ffmpegErr = exec.LookPath("ffmpeg")
+			if errors.Is(ffmpegErr, exec.ErrDot) {
+				log.Trace("ffmpeg found in current folder '.'")
+				ffmpegPath, ffmpegErr = exec.LookPath("./ffmpeg")
+			}
+		}
+		if ffmpegErr == nil {
+			log.Info("Found ffmpeg", "path", ffmpegPath)
+			return
+		}
+	})
+	return ffmpegPath, ffmpegErr
+}
+
+// These variables are accessible here for tests. Do not use them directly in production code. Use ffmpegCmd() instead.
+var (
+	ffOnce     sync.Once
+	ffmpegPath string
+	ffmpegErr  error
+	probeOnce  sync.Once
+	probeAvail bool
+)

@@ -1,0 +1,39 @@
+.root {
+    justify-content: center;
+}
+
+.control {
+    color: var(--theme-colors-foreground);
+    background-color: var(--theme-colors-surface);
+    border: none;
+    transition:
+        background 0.2s ease-in-out,
+        color 0.2s ease-in-out;
+
+    &[data-active] {
+        color: var(--theme-colors-primary-contrast);
+        background-color: var(--theme-colors-primary-filled);
+    }
+
+    &[data-dots] {
+        background-color: transparent;
+    }
+
+    &:hover {
+        background-color: lighten(var(--theme-colors-surface), 10%);
+
+        &[data-active] {
+            background-color: darken(var(--theme-colors-primary-filled), 10%);
+        }
+
+        &[data-dots] {
+            background-color: transparent;
+        }
+    }
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

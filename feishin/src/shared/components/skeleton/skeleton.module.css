@@ -1,0 +1,74 @@
+.skeleton {
+    @mixin dark {
+        --base-color: lighten(var(--theme-colors-surface), 10%) !important;
+        --highlight-color: lighten(var(--theme-colors-surface), 15%) !important;
+    }
+
+    @mixin light {
+        --base-color: darken(var(--theme-colors-surface), 10%) !important;
+        --highlight-color: darken(var(--theme-colors-surface), 15%) !important;
+    }
+
+    --animation-duration: 1.5s !important;
+
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        var(--base-color) 0%,
+        var(--highlight-color) 50%,
+        var(--base-color) 100%
+    );
+    background-size: 200% 100%;
+    border-radius: var(--skeleton-border-radius, 0.25rem);
+}
+
+.skeleton.animated {
+    animation: shimmer var(--animation-duration) ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.skeleton-container.inline {
+    display: inline-flex;
+}
+
+.skeleton-container.centered {
+    justify-content: center;
+}
+
+.skeleton-container.rtl {
+    flex-direction: row-reverse;
+}
+
+.skeleton-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+}
+
+.skeleton-wrapper.inline {
+    display: inline-flex;
+}
+
+.skeleton-wrapper.rtl {
+    direction: rtl;
+}

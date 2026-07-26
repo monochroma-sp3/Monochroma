@@ -1,0 +1,66 @@
+version: "2"
+run:
+  build-tags:
+    - netgo
+    - sqlite_fts5
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - copyloopvar
+    - dogsled
+    - durationcheck
+    - errorlint
+    - gocritic
+    - gocyclo
+    - goprintffuncname
+    - gosec
+    - misspell
+    - nakedret
+    - nilerr
+    - rowserrcheck
+    - unconvert
+    - whitespace
+  disable:
+    - staticcheck
+  settings:
+    gocritic:
+      disable-all: true
+      enabled-checks:
+        - deprecatedComment
+    gosec:
+      excludes:
+        - G501
+        - G401
+        - G505
+        - G115
+    govet:
+      enable:
+        - nilness
+  exclusions:
+    rules:
+      - linters:
+          - gosec
+        path: _test\.go
+        text: "G703"
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - node_modules
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - node_modules

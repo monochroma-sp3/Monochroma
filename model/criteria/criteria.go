@@ -1,0 +1,229 @@
+// Package criteria implements a Criteria API based on Masterminds/squirrel
+package criteria
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/Masterminds/squirrel"
+	"github.com/navidrome/navidrome/log"
+)
+
+type Expression = squirrel.Sqlizer
+
+type Criteria struct {
+	Expression
+	Sort         string
+	Order        string
+	Limit        int
+	LimitPercent int
+	Offset       int
+}
+
+// EffectiveLimit resolves the effective limit for a query. If a fixed Limit is
+// set it takes precedence. Otherwise, if LimitPercent is set, the limit is
+// computed as a percentage of totalCount (minimum 1 when totalCount > 0).
+// Returns 0 when no limit applies.
+func (c Criteria) EffectiveLimit(totalCount int64) int {
+	if c.Limit > 0 {
+		return c.Limit
+	}
+	if c.LimitPercent > 0 && c.LimitPercent <= 100 {
+		if totalCount <= 0 {
+			return 0
+		}
+		result := int(totalCount) * c.LimitPercent / 100
+		if result < 1 {
+			return 1
+		}
+		return result
+	}
+	return 0
+}
+
+// IsPercentageLimit returns true when the criteria uses a valid percentage-based
+// limit (i.e. LimitPercent is in [1, 100] and no fixed Limit overrides it).
+func (c Criteria) IsPercentageLimit() bool {
+	return c.Limit == 0 && c.LimitPercent > 0 && c.LimitPercent <= 100
+}
+
+func (c Criteria) OrderBy() string {
+	if c.Sort == "" {
+		c.Sort = "title"
+	}
+
+	order := strings.ToLower(strings.TrimSpace(c.Order))
+	if order != "" && order != "asc" && order != "desc" {
+		log.Error("Invalid value in 'order' field. Valid values: 'asc', 'desc'", "order", c.Order)
+		order = ""
+	}
+
+	parts := strings.Split(c.Sort, ",")
+	fields := make([]string, 0, len(parts))
+
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+
+		dir := "asc"
+		if strings.HasPrefix(p, "+") || strings.HasPrefix(p, "-") {
+			if strings.HasPrefix(p, "-") {
+				dir = "desc"
+			}
+			p = strings.TrimSpace(p[1:])
+		}
+
+		sortField := strings.ToLower(p)
+		f := fieldMap[sortField]
+		if f == nil {
+			log.Error("Invalid field in 'sort' field", "sort", sortField)
+			continue
+		}
+
+		var mapped string
+
+		if f.order != "" {
+			mapped = f.order
+		} else if f.isTag {
+			// Use the actual field name (handles aliases like albumtype -> releasetype)
+			tagName := sortField
+			if f.field != "" {
+				tagName = f.field
+			}
+			mapped = "COALESCE(json_extract(media_file.tags, '$." + tagName + "[0].value'), '')"
+		} else if f.isRole {
+			mapped = "COALESCE(json_extract(media_file.participants, '$." + sortField + "[0].name'), '')"
+		} else {
+			mapped = f.field
+		}
+		if f.numeric {
+			mapped = fmt.Sprintf("CAST(%s AS REAL)", mapped)
+		}
+		// If the global 'order' field is set to 'desc', reverse the default or field-specific sort direction.
+		// This ensures that the global order applies consistently across all fields.
+		if order == "desc" {
+			if dir == "asc" {
+				dir = "desc"
+			} else {
+				dir = "asc"
+			}
+		}
+
+		fields = append(fields, mapped+" "+dir)
+	}
+
+	return strings.Join(fields, ", ")
+}
+
+func (c Criteria) ToSql() (sql string, args []any, err error) {
+	return c.Expression.ToSql()
+}
+
+// ExpressionJoins returns only the JOINs needed by the WHERE-clause expression,
+// excluding any JOINs required solely for sorting. This is useful for COUNT
+// queries where sort order is irrelevant.
+func (c Criteria) ExpressionJoins() JoinType {
+	if c.Expression == nil {
+		return JoinNone
+	}
+	return extractJoinTypes(c.Expression)
+}
+
+// RequiredJoins inspects the expression tree and Sort field to determine which
+// additional JOINs are needed when evaluating this criteria.
+func (c Criteria) RequiredJoins() JoinType {
+	result := JoinNone
+	if c.Expression != nil {
+		result |= extractJoinTypes(c.Expression)
+	}
+	// Also check Sort fields
+	if c.Sort != "" {
+		for _, p := range strings.Split(c.Sort, ",") {
+			p = strings.TrimSpace(p)
+			p = strings.TrimLeft(p, "+-")
+			p = strings.TrimSpace(p)
+			result |= fieldJoinType(p)
+		}
+	}
+	return result
+}
+
+func (c Criteria) ChildPlaylistIds() []string {
+	if c.Expression == nil {
+		return nil
+	}
+
+	if parent := c.Expression.(interface{ ChildPlaylistIds() (ids []string) }); parent != nil {
+		return parent.ChildPlaylistIds()
+	}
+
+	return nil
+}
+
+func (c Criteria) MarshalJSON() ([]byte, error) {
+	aux := struct {
+		All          []Expression `json:"all,omitempty"`
+		Any          []Expression `json:"any,omitempty"`
+		Sort         string       `json:"sort,omitempty"`
+		Order        string       `json:"order,omitempty"`
+		Limit        int          `json:"limit,omitempty"`
+		LimitPercent int          `json:"limitPercent,omitempty"`
+		Offset       int          `json:"offset,omitempty"`
+	}{
+		Sort:         c.Sort,
+		Order:        c.Order,
+		Limit:        c.Limit,
+		LimitPercent: c.LimitPercent,
+		Offset:       c.Offset,
+	}
+	switch rules := c.Expression.(type) {
+	case Any:
+		aux.Any = rules
+	case All:
+		aux.All = rules
+	default:
+		aux.All = All{rules}
+	}
+	return json.Marshal(aux)
+}
+
+func (c *Criteria) UnmarshalJSON(data []byte) error {
+	var aux struct {
+		All          unmarshalConjunctionType `json:"all"`
+		Any          unmarshalConjunctionType `json:"any"`
+		Sort         string                   `json:"sort"`
+		Order        string                   `json:"order"`
+		Limit        int                      `json:"limit"`
+		LimitPercent int                      `json:"limitPercent"`
+		Offset       int                      `json:"offset"`
+	}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	if len(aux.Any) > 0 {
+		c.Expression = Any(aux.Any)
+	} else if len(aux.All) > 0 {
+		c.Expression = All(aux.All)
+	} else {
+		return errors.New("invalid criteria json. missing rules (key 'all' or 'any')")
+	}
+	c.Sort = aux.Sort
+	c.Order = aux.Order
+	c.Limit = aux.Limit
+	c.Offset = aux.Offset
+
+	// Clamp LimitPercent to [0, 100]
+	if aux.LimitPercent < 0 {
+		log.Warn("limitPercent value out of range, clamping to 0", "value", aux.LimitPercent)
+		aux.LimitPercent = 0
+	} else if aux.LimitPercent > 100 {
+		log.Warn("limitPercent value out of range, clamping to 100", "value", aux.LimitPercent)
+		aux.LimitPercent = 100
+	}
+	c.LimitPercent = aux.LimitPercent
+	return nil
+}

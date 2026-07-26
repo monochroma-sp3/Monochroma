@@ -1,0 +1,17 @@
+.header-container {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    align-items: center;
+    width: 100%;
+    max-width: var(--theme-content-max-width);
+    height: 100%;
+    padding: 0 var(--theme-spacing-sm);
+}
+
+.play-button-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

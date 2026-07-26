@@ -1,0 +1,359 @@
+import type { MantineThemeOverride } from '@mantine/core';
+
+import { generateColors } from '@mantine/colors-generator';
+import { useMantineColorScheme } from '@mantine/core';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import {
+    useAccent,
+    useFontSettings,
+    useNativeAspectRatio,
+    useThemeSettings,
+} from '/@/renderer/store/settings.store';
+import { createMantineTheme } from '/@/renderer/themes/mantine-theme';
+import { getAppTheme } from '/@/shared/themes/app-theme';
+import { AppTheme, AppThemeConfiguration } from '/@/shared/themes/app-theme-types';
+import { FontType } from '/@/shared/types/types';
+
+export const THEME_DATA = [
+    { label: 'Default Dark', type: 'dark', value: AppTheme.DEFAULT_DARK },
+    { label: 'Default Light', type: 'light', value: AppTheme.DEFAULT_LIGHT },
+    { label: 'Nord', type: 'dark', value: AppTheme.NORD },
+    { label: 'Dracula', type: 'dark', value: AppTheme.DRACULA },
+    { label: 'One Dark', type: 'dark', value: AppTheme.ONE_DARK },
+    { label: 'Solarized Dark', type: 'dark', value: AppTheme.SOLARIZED_DARK },
+    { label: 'Solarized Light', type: 'light', value: AppTheme.SOLARIZED_LIGHT },
+    { label: 'Everforest Dark', type: 'dark', value: AppTheme.EVERFOREST_DARK },
+    { label: 'Everforest Light', type: 'light', value: AppTheme.EVERFOREST_LIGHT },
+    { label: 'GitHub Dark', type: 'dark', value: AppTheme.GITHUB_DARK },
+    { label: 'GitHub Light', type: 'light', value: AppTheme.GITHUB_LIGHT },
+    { label: 'Glassy Dark', type: 'dark', value: AppTheme.GLASSY_DARK },
+    { label: 'Monokai', type: 'dark', value: AppTheme.MONOKAI },
+    { label: 'High Contrast Dark', type: 'dark', value: AppTheme.HIGH_CONTRAST_DARK },
+    { label: 'High Contrast Light', type: 'light', value: AppTheme.HIGH_CONTRAST_LIGHT },
+    { label: 'Tokyo Night', type: 'dark', value: AppTheme.TOKYO_NIGHT },
+    { label: 'Catppuccin Mocha', type: 'dark', value: AppTheme.CATPPUCCIN_MOCHA },
+    { label: 'Catppuccin Latte', type: 'light', value: AppTheme.CATPPUCCIN_LATTE },
+    { label: 'Gruvbox Dark', type: 'dark', value: AppTheme.GRUVBOX_DARK },
+    { label: 'Gruvbox Light', type: 'light', value: AppTheme.GRUVBOX_LIGHT },
+    { label: 'Night Owl', type: 'dark', value: AppTheme.NIGHT_OWL },
+    { label: 'Material Dark', type: 'dark', value: AppTheme.MATERIAL_DARK },
+    { label: 'Material Light', type: 'light', value: AppTheme.MATERIAL_LIGHT },
+    { label: 'Ayu Dark', type: 'dark', value: AppTheme.AYU_DARK },
+    { label: 'Ayu Light', type: 'light', value: AppTheme.AYU_LIGHT },
+    { label: 'Shades of Purple', type: 'dark', value: AppTheme.SHADES_OF_PURPLE },
+    { label: 'VS Code Dark+', type: 'dark', value: AppTheme.VSCODE_DARK_PLUS },
+    { label: 'VS Code Light+', type: 'light', value: AppTheme.VSCODE_LIGHT_PLUS },
+    { label: 'Rosé Pine', type: 'dark', value: AppTheme.ROSE_PINE },
+    { label: 'Rosé Pine Moon', type: 'dark', value: AppTheme.ROSE_PINE_MOON },
+    { label: 'Rosé Pine Dawn', type: 'light', value: AppTheme.ROSE_PINE_DAWN },
+    { label: 'Zenburn', type: 'dark', value: AppTheme.ZENBURN },
+];
+
+export const useAppTheme = (overrideTheme?: AppTheme) => {
+    const accent = useAccent();
+    const nativeImageAspect = useNativeAspectRatio();
+    const { builtIn, custom, system, type } = useFontSettings();
+    const textStyleRef = useRef<HTMLStyleElement | null>(null);
+    const themeInlineStylesRef = useRef<HTMLStyleElement | null>(null);
+    const getCurrentTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const [isDarkTheme, setIsDarkTheme] = useState(getCurrentTheme());
+    const {
+        followSystemTheme,
+        primaryShade,
+        theme,
+        themeDark,
+        themeLight,
+        useThemeAccentColor,
+        useThemePrimaryShade,
+    } = useThemeSettings();
+
+    const mqListener = (e: any) => {
+        setIsDarkTheme(e.matches);
+    };
+
+    const applyInlineStylesheets = useCallback((inlineCssStrings: string[] = []) => {
+        const cssText = inlineCssStrings.filter(Boolean).join('\n');
+
+        if (!themeInlineStylesRef.current) {
+            const styleEl = document.createElement('style');
+            styleEl.id = 'theme-inline-styles';
+            document.head.appendChild(styleEl);
+            themeInlineStylesRef.current = styleEl;
+        }
+
+        themeInlineStylesRef.current.textContent = cssText;
+    }, []);
+
+    const getSelectedTheme = () => {
+        if (overrideTheme) {
+            return overrideTheme;
+        }
+
+        if (followSystemTheme) {
+            return isDarkTheme ? themeDark : themeLight;
+        }
+
+        return theme;
+    };
+
+    const selectedTheme = getSelectedTheme();
+
+    useEffect(() => {
+        const darkThemeMq = window.matchMedia('(prefers-color-scheme: dark)');
+        darkThemeMq.addListener(mqListener);
+        return () => darkThemeMq.removeListener(mqListener);
+    }, []);
+
+    useEffect(() => {
+        if (type === FontType.SYSTEM && system) {
+            const root = document.documentElement;
+            root.style.setProperty(
+                '--theme-content-font-family',
+                'dynamic-font, "Noto Sans JP", "Noto Sans Hebrew", sans-serif',
+            );
+
+            if (!textStyleRef.current) {
+                textStyleRef.current = document.createElement('style');
+                document.body.appendChild(textStyleRef.current);
+            }
+
+            textStyleRef.current.textContent = `
+            @font-face {
+                font-family: "dynamic-font";
+                src: local("${system}");
+            }`;
+        } else if (type === FontType.CUSTOM && custom) {
+            const root = document.documentElement;
+            root.style.setProperty(
+                '--theme-content-font-family',
+                'dynamic-font, "Noto Sans JP", "Noto Sans Hebrew", sans-serif',
+            );
+
+            if (!textStyleRef.current) {
+                textStyleRef.current = document.createElement('style');
+                document.body.appendChild(textStyleRef.current);
+            }
+
+            // Note: we change the url to bust caches when changing the path
+            // The url provided here does NOT matter, validation is done
+            // on the main process. Any feishin:/ url will fetch the same
+            // item, which the renderer will check via magic number to be
+            // some font item
+            textStyleRef.current.textContent = `
+            @font-face {
+                font-family: "dynamic-font";
+                src: url("feishin:${custom}");
+            }`;
+        } else {
+            const root = document.documentElement;
+            root.style.setProperty(
+                '--theme-content-font-family',
+                `${builtIn}, "Noto Sans JP", "Noto Sans Hebrew", sans-serif`,
+            );
+        }
+    }, [builtIn, custom, system, type]);
+
+    const appTheme: AppThemeConfiguration = useMemo(() => {
+        const themeProperties = getAppTheme(selectedTheme);
+
+        // Use theme's primary color if useThemeAccentColor is enabled, otherwise use custom accent
+        const primaryColor = useThemeAccentColor
+            ? themeProperties.colors?.primary || themeProperties.colors?.['state-info'] || accent
+            : accent;
+
+        // Use theme's primary shade if useThemePrimaryShade is enabled, otherwise use slider value (0-9)
+        const effectivePrimaryShade: MantineThemeOverride['primaryShade'] = useThemePrimaryShade
+            ? themeProperties.mantineOverride?.primaryShade
+            : ({ dark: primaryShade, light: primaryShade } as MantineThemeOverride['primaryShade']);
+
+        return {
+            ...themeProperties,
+            colors: {
+                ...themeProperties.colors,
+                primary: primaryColor,
+            },
+            mantineOverride: {
+                ...themeProperties.mantineOverride,
+                ...(effectivePrimaryShade != null && { primaryShade: effectivePrimaryShade }),
+            },
+        };
+    }, [accent, primaryShade, selectedTheme, useThemeAccentColor, useThemePrimaryShade]);
+
+    useEffect(() => {
+        const root = document.documentElement;
+        const themeProperties = getAppTheme(selectedTheme);
+        const primaryColor = useThemeAccentColor
+            ? themeProperties.colors?.primary || themeProperties.colors?.['state-info'] || accent
+            : accent;
+        const effectivePrimaryShade: MantineThemeOverride['primaryShade'] = useThemePrimaryShade
+            ? themeProperties.mantineOverride?.primaryShade
+            : ({ dark: primaryShade, light: primaryShade } as MantineThemeOverride['primaryShade']);
+        const mode = themeProperties.mode ?? (isDarkTheme ? 'dark' : 'light');
+        const shadeIndex = Math.min(
+            9,
+            Math.max(
+                0,
+                typeof effectivePrimaryShade === 'object'
+                    ? (effectivePrimaryShade?.[mode] ?? 6)
+                    : (effectivePrimaryShade ?? 6),
+            ),
+        );
+        const primaryScale = generateColors(primaryColor);
+        const primaryAtShade = primaryScale[shadeIndex];
+        root.style.setProperty('--theme-colors-primary', primaryAtShade);
+    }, [
+        accent,
+        isDarkTheme,
+        primaryShade,
+        selectedTheme,
+        useThemeAccentColor,
+        useThemePrimaryShade,
+    ]);
+
+    useEffect(() => {
+        const root = document.documentElement;
+        root.style.setProperty('--theme-image-fit', nativeImageAspect ? 'contain' : 'cover');
+    }, [nativeImageAspect]);
+
+    useEffect(() => {
+        applyInlineStylesheets(appTheme?.stylesheets ?? []);
+    }, [selectedTheme, appTheme?.stylesheets, applyInlineStylesheets]);
+
+    const themeVars = useMemo(() => {
+        return Object.entries(appTheme?.app ?? {})
+            .map(([key, value]) => {
+                return [`--theme-${key}`, value];
+            })
+            .filter(Boolean) as [string, string][];
+    }, [appTheme]);
+
+    const colorVars = useMemo(() => {
+        return Object.entries(appTheme?.colors ?? {})
+            .map(([key, value]) => {
+                return [`--theme-colors-${key}`, value];
+            })
+            .filter(Boolean) as [string, string][];
+    }, [appTheme]);
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', selectedTheme);
+
+        if (themeVars.length > 0 || colorVars.length > 0) {
+            let styleElement = document.getElementById('theme-variables');
+            if (!styleElement) {
+                styleElement = document.createElement('style');
+                styleElement.id = 'theme-variables';
+                document.head.appendChild(styleElement);
+            }
+
+            let cssText = ':root {\n';
+
+            for (const [key, value] of themeVars) {
+                cssText += `  ${key}: ${value};\n`;
+            }
+
+            for (const [key, value] of colorVars) {
+                cssText += `  ${key}: ${value};\n`;
+            }
+
+            cssText += '}';
+
+            styleElement.textContent = cssText;
+        }
+    }, [colorVars, selectedTheme, themeVars]);
+
+    const mantineTheme = useMemo(
+        () => createMantineTheme(appTheme as AppThemeConfiguration),
+        [appTheme],
+    );
+
+    return {
+        mode: appTheme?.mode || 'dark',
+        theme: mantineTheme,
+    };
+};
+
+export const useSetColorScheme = () => {
+    const { setColorScheme } = useMantineColorScheme();
+
+    return { setColorScheme };
+};
+
+export const useColorScheme = () => {
+    const { colorScheme } = useMantineColorScheme();
+
+    return colorScheme === 'dark' ? 'dark' : 'light';
+};
+
+export const useAppThemeColors = () => {
+    const accent = useAccent();
+    const getCurrentTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const [isDarkTheme] = useState(getCurrentTheme());
+    const {
+        followSystemTheme,
+        primaryShade,
+        theme,
+        themeDark,
+        themeLight,
+        useThemeAccentColor,
+        useThemePrimaryShade,
+    } = useThemeSettings();
+
+    const getSelectedTheme = () => {
+        if (followSystemTheme) {
+            return isDarkTheme ? themeDark : themeLight;
+        }
+
+        return theme;
+    };
+
+    const selectedTheme = getSelectedTheme();
+
+    const appTheme: AppThemeConfiguration = useMemo(() => {
+        const themeProperties = getAppTheme(selectedTheme);
+
+        // Use theme's primary color if useThemeAccentColor is enabled, otherwise use custom accent
+        const primaryColor = useThemeAccentColor
+            ? themeProperties.colors?.primary || themeProperties.colors?.['state-info'] || accent
+            : accent;
+
+        // Use theme's primary shade if useThemePrimaryShade is enabled, otherwise use slider value (0-9)
+        const effectivePrimaryShade: MantineThemeOverride['primaryShade'] = useThemePrimaryShade
+            ? themeProperties.mantineOverride?.primaryShade
+            : ({ dark: primaryShade, light: primaryShade } as MantineThemeOverride['primaryShade']);
+
+        return {
+            ...themeProperties,
+            colors: {
+                ...themeProperties.colors,
+                primary: primaryColor,
+            },
+            mantineOverride: {
+                ...themeProperties.mantineOverride,
+                ...(effectivePrimaryShade != null && { primaryShade: effectivePrimaryShade }),
+            },
+        };
+    }, [accent, primaryShade, selectedTheme, useThemeAccentColor, useThemePrimaryShade]);
+
+    const themeVars = useMemo(() => {
+        return Object.entries(appTheme?.app ?? {})
+            .map(([key, value]) => {
+                return [`--theme-${key}`, value];
+            })
+            .filter(Boolean) as [string, string][];
+    }, [appTheme]);
+
+    const colorVars = useMemo(() => {
+        return Object.entries(appTheme?.colors ?? {})
+            .map(([key, value]) => {
+                return [`--theme-colors-${key}`, value];
+            })
+            .filter(Boolean) as [string, string][];
+    }, [appTheme]);
+
+    return {
+        color: Object.fromEntries(colorVars),
+        theme: Object.fromEntries(themeVars),
+    };
+};

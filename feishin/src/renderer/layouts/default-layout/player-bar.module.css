@@ -1,0 +1,20 @@
+.container {
+    z-index: 200;
+    grid-area: player;
+
+    @mixin light {
+        background: darken(var(--theme-colors-background), 5%);
+    }
+
+    @mixin dark {
+        background: darken(var(--theme-colors-background), 10%);
+    }
+
+    transition: background 0.5s;
+}
+
+.open-drawer {
+    &:hover {
+        background: darken(var(--theme-colors-background), 20%);
+    }
+}

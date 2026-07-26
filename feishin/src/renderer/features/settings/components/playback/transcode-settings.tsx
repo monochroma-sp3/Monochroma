@@ -1,0 +1,88 @@
+import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import {
+    SettingOption,
+    SettingsSection,
+} from '/@/renderer/features/settings/components/settings-section';
+import { usePlaybackSettings, useSettingsStoreActions } from '/@/renderer/store/settings.store';
+import { NumberInput } from '/@/shared/components/number-input/number-input';
+import { Switch } from '/@/shared/components/switch/switch';
+import { TextInput } from '/@/shared/components/text-input/text-input';
+
+export const TranscodeSettings = memo(() => {
+    const { t } = useTranslation();
+    const { transcode } = usePlaybackSettings();
+    const { setTranscodingConfig } = useSettingsStoreActions();
+    const note = t('setting.transcodeNote');
+
+    const transcodeOptions: SettingOption[] = [
+        {
+            control: (
+                <Switch
+                    aria-label="Toggle transcode"
+                    defaultChecked={transcode.enabled}
+                    onChange={(e) => {
+                        setTranscodingConfig({
+                            ...transcode,
+                            enabled: e.currentTarget.checked,
+                        });
+                    }}
+                />
+            ),
+            description: t('setting.transcode', {
+                context: 'description',
+            }),
+            note,
+            title: t('setting.transcode'),
+        },
+        {
+            control: (
+                <NumberInput
+                    aria-label="Transcode bitrate"
+                    defaultValue={transcode.bitrate}
+                    min={0}
+                    onBlur={(e) => {
+                        setTranscodingConfig({
+                            ...transcode,
+                            bitrate: e.currentTarget.value
+                                ? Number(e.currentTarget.value)
+                                : undefined,
+                        });
+                    }}
+                    w={100}
+                />
+            ),
+            description: t('setting.transcodeBitrate', {
+                context: 'description',
+            }),
+            isHidden: !transcode.enabled,
+            note,
+            title: t('setting.transcodeBitrate'),
+        },
+        {
+            control: (
+                <TextInput
+                    aria-label="transcoding format"
+                    defaultValue={transcode.format}
+                    onBlur={(e) => {
+                        setTranscodingConfig({
+                            ...transcode,
+                            format: e.currentTarget.value || undefined,
+                        });
+                    }}
+                    placeholder="mp3, opus"
+                    width={100}
+                />
+            ),
+            description: t('setting.transcodeFormat', {
+                context: 'description',
+            }),
+            isHidden: !transcode.enabled,
+            note,
+            title: t('setting.transcodeFormat'),
+        },
+    ];
+
+    return <SettingsSection options={transcodeOptions} title={t('page.setting.transcoding')} />;
+});

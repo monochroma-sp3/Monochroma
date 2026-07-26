@@ -1,0 +1,20 @@
+.sidebar-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: calc(100vh - 119px);
+    user-select: none;
+}
+
+.sidebar-container.web,
+.sidebar-container.linux {
+    max-height: calc(100vh - 149px);
+}
+
+.server-icon {
+    width: 2rem;
+    height: 2rem;
+    object-fit: cover;
+    border-radius: var(--theme-radius-md);
+}

@@ -1,0 +1,22 @@
+.buttons-container {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.controls-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+
+    @media (width < 768px) {
+        .buttons-container {
+            gap: 0;
+        }
+
+        .slider-value-wrapper {
+            display: none;
+        }
+    }
+}

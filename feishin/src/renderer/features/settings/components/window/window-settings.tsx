@@ -1,0 +1,230 @@
+import isElectron from 'is-electron';
+import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import {
+    SettingOption,
+    SettingsSection,
+} from '/@/renderer/features/settings/components/settings-section';
+import { openRestartRequiredToast } from '/@/renderer/features/settings/restart-toast';
+import { useSettingsStoreActions, useWindowSettings } from '/@/renderer/store';
+import { Select } from '/@/shared/components/select/select';
+import { Switch } from '/@/shared/components/switch/switch';
+import { Platform } from '/@/shared/types/types';
+
+const WINDOW_BAR_OPTIONS = [
+    { label: 'Web (hidden)', value: Platform.WEB },
+    { label: 'Windows', value: Platform.WINDOWS },
+    { label: 'macOS', value: Platform.MACOS },
+    { label: 'Native', value: Platform.LINUX },
+];
+
+const localSettings = isElectron() ? window.api.localSettings : null;
+
+export const WindowSettings = memo(() => {
+    const { t } = useTranslation();
+    const settings = useWindowSettings();
+    const { setSettings } = useSettingsStoreActions();
+
+    const windowOptions: SettingOption[] = [
+        {
+            control: (
+                <Select
+                    data={WINDOW_BAR_OPTIONS}
+                    disabled={!isElectron()}
+                    onChange={(e) => {
+                        if (!e) return;
+
+                        // Platform.LINUX is used as the native frame option regardless of the actual platform
+                        const previousWindowBarStyle = settings.windowBarStyle;
+                        const isSwitchingToNative =
+                            previousWindowBarStyle !== Platform.LINUX && e === Platform.LINUX;
+                        const isSwitchingFromNative =
+                            previousWindowBarStyle === Platform.LINUX && e !== Platform.LINUX;
+                        const requireRestart = isSwitchingToNative || isSwitchingFromNative;
+
+                        if (requireRestart) {
+                            openRestartRequiredToast();
+                        }
+
+                        localSettings?.set('window_window_bar_style', e as Platform);
+                        setSettings({
+                            window: {
+                                windowBarStyle: e as Platform,
+                            },
+                        });
+                    }}
+                    value={settings.windowBarStyle}
+                />
+            ),
+            description: t('setting.windowBarStyle', {
+                context: 'description',
+            }),
+            isHidden: !isElectron(),
+            title: t('setting.windowBarStyle'),
+        },
+        {
+            control: (
+                <Switch
+                    aria-label="toggle hiding tray"
+                    defaultChecked={settings.tray}
+                    disabled={!isElectron()}
+                    onChange={(e) => {
+                        if (!e) return;
+                        localSettings?.set('window_enable_tray', e.currentTarget.checked);
+                        if (e.currentTarget.checked) {
+                            setSettings({
+                                window: {
+                                    tray: true,
+                                },
+                            });
+                        } else {
+                            localSettings?.set('window_start_minimized', false);
+                            localSettings?.set('window_exit_to_tray', false);
+                            localSettings?.set('window_minimize_to_tray', false);
+
+                            setSettings({
+                                window: {
+                                    exitToTray: false,
+                                    minimizeToTray: false,
+                                    startMinimized: false,
+                                    tray: false,
+                                },
+                            });
+                        }
+                    }}
+                />
+            ),
+            description: t('setting.trayEnabled', {
+                context: 'description',
+            }),
+            isHidden: !isElectron(),
+            note: t('common.restartRequired'),
+            title: t('setting.trayEnabled'),
+        },
+        {
+            control: (
+                <Switch
+                    aria-label="Toggle minimize to tray"
+                    defaultChecked={settings.tray}
+                    disabled={!isElectron()}
+                    onChange={(e) => {
+                        if (!e) return;
+                        localSettings?.set('window_minimize_to_tray', e.currentTarget.checked);
+                        setSettings({
+                            window: {
+                                minimizeToTray: e.currentTarget.checked,
+                            },
+                        });
+                    }}
+                />
+            ),
+            description: t('setting.minimizeToTray', {
+                context: 'description',
+            }),
+            isHidden: !isElectron() || !settings.tray,
+            title: t('setting.minimizeToTray'),
+        },
+        {
+            control: (
+                <Switch
+                    aria-label="Toggle exit to tray"
+                    defaultChecked={settings.exitToTray}
+                    disabled={!isElectron()}
+                    onChange={(e) => {
+                        if (!e) return;
+                        localSettings?.set('window_exit_to_tray', e.currentTarget.checked);
+                        setSettings({
+                            window: {
+                                exitToTray: e.currentTarget.checked,
+                            },
+                        });
+                    }}
+                />
+            ),
+            description: t('setting.exitToTray', {
+                context: 'description',
+            }),
+            isHidden: !isElectron() || !settings.tray,
+            title: t('setting.exitToTray'),
+        },
+        {
+            control: (
+                <Switch
+                    aria-label="Toggle start in tray"
+                    defaultChecked={settings.startMinimized}
+                    disabled={!isElectron()}
+                    onChange={(e) => {
+                        if (!e) return;
+                        localSettings?.set('window_start_minimized', e.currentTarget.checked);
+                        setSettings({
+                            window: {
+                                startMinimized: e.currentTarget.checked,
+                            },
+                        });
+                    }}
+                />
+            ),
+            description: t('setting.startMinimized', {
+                context: 'description',
+            }),
+            isHidden: !isElectron() || !settings.tray,
+            title: t('setting.startMinimized'),
+        },
+        {
+            control: (
+                <Switch
+                    aria-label="Toggle prevent sleep on playback"
+                    defaultChecked={settings.preventSleepOnPlayback}
+                    disabled={!isElectron() || settings.preventSuspendOnPlayback}
+                    onChange={(e) => {
+                        if (!e) return;
+                        localSettings?.set(
+                            'window_prevent_sleep_on_playback',
+                            e.currentTarget.checked,
+                        );
+                        setSettings({
+                            window: {
+                                preventSleepOnPlayback: e.currentTarget.checked,
+                            },
+                        });
+                    }}
+                />
+            ),
+            description: t('setting.preventSleepOnPlayback', {
+                context: 'description',
+            }),
+            isHidden: !isElectron(),
+            title: t('setting.preventSleepOnPlayback'),
+        },
+        {
+            control: (
+                <Switch
+                    aria-label="Toggle prevent suspend on playback"
+                    defaultChecked={settings.preventSuspendOnPlayback}
+                    disabled={!isElectron() || settings.preventSleepOnPlayback}
+                    onChange={(e) => {
+                        if (!e) return;
+                        localSettings?.set(
+                            'window_prevent_suspend_on_playback',
+                            e.currentTarget.checked,
+                        );
+                        setSettings({
+                            window: {
+                                preventSuspendOnPlayback: e.currentTarget.checked,
+                            },
+                        });
+                    }}
+                />
+            ),
+            description: t('setting.preventSuspendOnPlayback', {
+                context: 'description',
+                postProcess: 'sentenceCase',
+            }),
+            isHidden: !isElectron(),
+            title: t('setting.preventSuspendOnPlayback', { postProcess: 'sentenceCase' }),
+        },
+    ];
+
+    return <SettingsSection options={windowOptions} title={t('page.setting.application')} />;
+});

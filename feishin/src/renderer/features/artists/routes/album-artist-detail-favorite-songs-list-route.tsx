@@ -1,0 +1,179 @@
+import { useSuspenseQueries } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useParams } from 'react-router';
+
+import { playSongFromItemListControl } from '/@/renderer/components/item-list/helpers/play-row-from-list';
+import { useItemListColumnReorder } from '/@/renderer/components/item-list/helpers/use-item-list-column-reorder';
+import { useItemListColumnResize } from '/@/renderer/components/item-list/helpers/use-item-list-column-resize';
+import { ItemTableList } from '/@/renderer/components/item-list/item-table-list/item-table-list';
+import { ItemTableListColumn } from '/@/renderer/components/item-list/item-table-list/item-table-list-column';
+import { ItemControls } from '/@/renderer/components/item-list/types';
+import { ListContext } from '/@/renderer/context/list-context';
+import { artistsQueries } from '/@/renderer/features/artists/api/artists-api';
+import { AlbumArtistDetailFavoriteSongsListHeader } from '/@/renderer/features/artists/components/album-artist-detail-favorite-songs-list-header';
+import { AlbumArtistDetailFavoriteSongsListHeaderFilters } from '/@/renderer/features/artists/components/album-artist-detail-favorite-songs-list-header-filters';
+import { usePlayer } from '/@/renderer/features/player/context/player-context';
+import { applyClientSideSongFilters } from '/@/renderer/features/playlists/hooks/use-playlist-track-list';
+import { AnimatedPage } from '/@/renderer/features/shared/components/animated-page';
+import { FilterBar } from '/@/renderer/features/shared/components/filter-bar';
+import { PageErrorBoundary } from '/@/renderer/features/shared/components/page-error-boundary';
+import { useSearchTermFilter } from '/@/renderer/features/shared/hooks/use-search-term-filter';
+import { FILTER_KEYS, searchLibraryItems } from '/@/renderer/features/shared/utils';
+import { usePlayerSong } from '/@/renderer/store';
+import { useAppStore } from '/@/renderer/store/app.store';
+import { useCurrentServer } from '/@/renderer/store/auth.store';
+import { useSettingsStore } from '/@/renderer/store/settings.store';
+import { sortSongList } from '/@/shared/api/utils';
+import { LibraryItem, Song } from '/@/shared/types/domain-types';
+import { ItemListKey } from '/@/shared/types/types';
+
+const AlbumArtistDetailFavoriteSongsListRoute = () => {
+    const { albumArtistId, artistId } = useParams() as {
+        albumArtistId?: string;
+        artistId?: string;
+    };
+    const routeId = (artistId || albumArtistId) as string;
+    const server = useCurrentServer();
+    const pageKey = LibraryItem.SONG;
+
+    const [detailQuery, favoriteSongsQuery] = useSuspenseQueries({
+        queries: [
+            artistsQueries.albumArtistDetail({
+                query: { id: routeId },
+                serverId: server?.id,
+            }),
+            artistsQueries.favoriteSongs({
+                query: { artistId: routeId },
+                serverId: server?.id,
+            }),
+        ],
+    });
+
+    const songs = useMemo(
+        () => favoriteSongsQuery?.data?.items || [],
+        [favoriteSongsQuery?.data?.items],
+    );
+
+    const albumArtistDetailFavoriteSongsSort = useAppStore(
+        (state) => state.albumArtistDetailFavoriteSongsSort,
+    );
+    const sortBy = albumArtistDetailFavoriteSongsSort.sortBy;
+    const sortOrder = albumArtistDetailFavoriteSongsSort.sortOrder;
+
+    const { searchTerm } = useSearchTermFilter();
+
+    const sortedSongs = useMemo(() => {
+        const filtered = applyClientSideSongFilters(songs, {
+            [FILTER_KEYS.SHARED.SEARCH_TERM]: searchTerm,
+        });
+        const searched = searchTerm
+            ? searchLibraryItems(filtered, searchTerm, LibraryItem.SONG)
+            : filtered;
+        return sortSongList(searched, sortBy, sortOrder);
+    }, [songs, sortBy, sortOrder, searchTerm]);
+
+    const itemCount = sortedSongs.length;
+
+    const tableConfig = useSettingsStore((state) => state.lists[ItemListKey.SONG]?.table);
+    const currentSong = usePlayerSong();
+    const player = usePlayer();
+
+    const columns = useMemo(() => {
+        return tableConfig?.columns || [];
+    }, [tableConfig?.columns]);
+
+    const { handleColumnReordered } = useItemListColumnReorder({
+        itemListKey: ItemListKey.SONG,
+    });
+
+    const { handleColumnResized } = useItemListColumnResize({
+        itemListKey: ItemListKey.SONG,
+    });
+
+    const overrideControls: Partial<ItemControls> = useMemo(() => {
+        return {
+            onDoubleClick: ({ index, internalState, item, meta }) => {
+                if (!item) {
+                    return;
+                }
+
+                playSongFromItemListControl({
+                    index,
+                    internalState,
+                    item: item as Song,
+                    meta,
+                    player,
+                });
+            },
+        };
+    }, [player]);
+
+    const providerValue = useMemo(() => {
+        return {
+            id: routeId,
+            pageKey,
+        };
+    }, [routeId, pageKey]);
+
+    const currentSongId = currentSong?.id;
+
+    if (!tableConfig || columns.length === 0) {
+        return (
+            <AnimatedPage>
+                <ListContext.Provider value={providerValue}>
+                    <AlbumArtistDetailFavoriteSongsListHeader
+                        data={sortedSongs}
+                        itemCount={itemCount}
+                        title={detailQuery?.data?.name || 'Unknown'}
+                    />
+                </ListContext.Provider>
+            </AnimatedPage>
+        );
+    }
+
+    return (
+        <AnimatedPage>
+            <ListContext.Provider value={providerValue}>
+                <AlbumArtistDetailFavoriteSongsListHeader
+                    data={sortedSongs}
+                    itemCount={itemCount}
+                    title={detailQuery?.data?.name || 'Unknown'}
+                />
+                <FilterBar>
+                    <AlbumArtistDetailFavoriteSongsListHeaderFilters />
+                </FilterBar>
+                <ItemTableList
+                    activeRowId={currentSongId}
+                    autoFitColumns={tableConfig.autoFitColumns}
+                    CellComponent={ItemTableListColumn}
+                    columns={columns}
+                    data={sortedSongs}
+                    enableAlternateRowColors={tableConfig.enableAlternateRowColors}
+                    enableDrag
+                    enableExpansion={false}
+                    enableHeader={tableConfig.enableHeader}
+                    enableHorizontalBorders={tableConfig.enableHorizontalBorders}
+                    enableRowHoverHighlight={tableConfig.enableRowHoverHighlight}
+                    enableSelection
+                    enableSelectionDialog={false}
+                    enableVerticalBorders={tableConfig.enableVerticalBorders}
+                    itemType={LibraryItem.SONG}
+                    onColumnReordered={handleColumnReordered}
+                    onColumnResized={handleColumnResized}
+                    overrideControls={overrideControls}
+                    size={tableConfig.size}
+                />
+            </ListContext.Provider>
+        </AnimatedPage>
+    );
+};
+
+const AlbumArtistDetailFavoriteSongsListRouteWithBoundary = () => {
+    return (
+        <PageErrorBoundary>
+            <AlbumArtistDetailFavoriteSongsListRoute />
+        </PageErrorBoundary>
+    );
+};
+
+export default AlbumArtistDetailFavoriteSongsListRouteWithBoundary;

@@ -1,0 +1,108 @@
+.play-queue-section {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.lyrics-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: var(--theme-spacing-md);
+    overflow: hidden;
+    background: var(--theme-colors-background);
+    background-color: var(--theme-colors-background-alternate);
+}
+
+.lyrics-section :global(.synchronized-lyrics) {
+    padding: 2rem 0 4rem !important;
+    transform: translateY(0) !important;
+}
+
+.lyrics-section :global(.synchronized-lyrics .lyric-line) {
+    padding: 0.25rem 0;
+}
+
+.visualizer-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.visualizer-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    background: var(--theme-colors-background);
+    background-color: var(--theme-colors-background-alternate);
+}
+
+.resize-handle {
+    position: relative;
+    z-index: 10;
+    flex-shrink: 0;
+    width: 100%;
+    height: 0;
+    padding: 4px 0;
+    margin: -4px 0;
+    cursor: row-resize;
+
+    &::before {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        content: '';
+        background: var(--theme-colors-border);
+        transform: translateY(-50%);
+        transition: opacity 0.2s ease;
+    }
+}
+
+.panel-reorder-controls {
+    position: absolute;
+    top: var(--theme-spacing-md);
+    left: var(--theme-spacing-md);
+    z-index: 100;
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.lyrics-section:hover .panel-reorder-controls,
+.visualizer-section:hover .panel-reorder-controls {
+    opacity: 1;
+}
+
+.draggable-region {
+    position: relative;
+    flex-shrink: 0;
+    width: 100%;
+    height: 65px;
+    -webkit-app-region: drag;
+}
+
+.draggable-region::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 130px;
+    height: 100%;
+    content: '';
+    -webkit-app-region: no-drag;
+}

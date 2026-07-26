@@ -1,0 +1,54 @@
+.search-item {
+    all: unset;
+    box-sizing: border-box !important;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 5px;
+
+    &:hover,
+    &:active,
+    &:focus-visible {
+        @mixin dark {
+            background-color: lighten(var(--theme-colors-background), 10%);
+        }
+
+        @mixin light {
+            background-color: darken(var(--theme-colors-background), 5%);
+        }
+    }
+}
+
+.selected {
+    background-color: alpha(var(--theme-colors-primary), 0.3);
+
+    &:hover,
+    &:active,
+    &:focus-visible {
+        @mixin dark {
+            background-color: alpha(var(--theme-colors-primary), 0.4);
+        }
+
+        @mixin light {
+            background-color: alpha(var(--theme-colors-primary), 0.4);
+        }
+    }
+}
+
+.lyrics-preview {
+    :global(.synchronized-lyrics) {
+        height: auto !important;
+        padding: 1rem 0 !important;
+        overflow: visible !important;
+        transform: none !important;
+    }
+}
+
+.lyrics-content-wrapper {
+    :global(> div) {
+        height: auto !important;
+        max-height: none !important;
+        padding: 1rem 0 !important;
+        overflow: visible !important;
+        transform: none !important;
+    }
+}

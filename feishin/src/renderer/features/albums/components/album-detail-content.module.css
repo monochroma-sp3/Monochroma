@@ -1,0 +1,125 @@
+.content-container {
+    position: relative;
+    z-index: 0;
+    container-type: inline-size;
+}
+
+.detail-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-lg);
+    padding: 1rem 2rem 5rem;
+}
+
+.content-layout {
+    display: grid;
+    grid-template-areas:
+        'metadata'
+        'songs';
+    grid-template-rows: auto auto;
+    grid-template-columns: 1fr;
+    gap: var(--theme-spacing-lg);
+    align-items: start;
+    width: 100%;
+    min-width: 0;
+}
+
+.metadata-column {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    grid-area: metadata;
+    gap: var(--theme-spacing-xl);
+    align-items: center;
+    text-align: center;
+}
+
+.songs-column {
+    display: flex;
+    flex-direction: column;
+    grid-area: songs;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.search-text-input {
+    background: transparent;
+    border-color: rgb(255 255 255 / 5%);
+    border-style: solid;
+    border-width: 1px;
+
+    @mixin light {
+        border-color: rgb(0 0 0 / 5%);
+    }
+
+    @mixin dark {
+        border-color: rgb(255 255 255 / 5%);
+    }
+}
+
+.external-links-group {
+    justify-content: center;
+}
+
+.metadata-pill-group {
+    align-items: center;
+}
+
+.pill-group-wrapper {
+    display: flex;
+    width: 100%;
+
+    & > div {
+        justify-content: center;
+    }
+}
+
+@container (min-width: $mantine-breakpoint-sm) {
+    .metadata-column {
+        flex-direction: row;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .external-links-group {
+        justify-content: flex-start;
+    }
+
+    .metadata-pill-group {
+        align-items: flex-start;
+    }
+
+    .pill-group-wrapper {
+        justify-content: flex-start;
+
+        & > div {
+            justify-content: flex-start;
+        }
+    }
+}
+
+@container (min-width: $mantine-breakpoint-lg) {
+    .content-layout {
+        grid-template-areas: 'songs metadata';
+        grid-template-rows: 1fr;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: var(--theme-spacing-xl);
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Prevent sticky headers from extending into the right margins */
+    .songs-column :global(.fs-item-table-list-module-sticky-header),
+    .songs-column :global(.fs-item-table-list-module-sticky-group-row) {
+        padding-right: 0;
+        margin-right: 0;
+    }
+
+    .metadata-column {
+        position: sticky;
+        top: calc(var(--theme-spacing-lg) + 4rem);
+        align-self: start;
+        width: 300px;
+        max-height: calc(100vh - 90px - var(--theme-spacing-lg) - 4rem);
+    }
+}

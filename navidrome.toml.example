@@ -1,0 +1,30 @@
+# Monochroma — Navidrome server configuration template.
+# Copy to `navidrome.toml` and fill in. `navidrome.toml` is gitignored, so real
+# keys never get committed. `./setup.sh` can generate this for you.
+
+EnablePublicRegistration = true
+EnableSharing = true
+
+# Optional scrobbling. Get a key/secret at https://www.last.fm/api/account/create
+[LastFM]
+Enabled = false
+ApiKey  = "YOUR_LASTFM_API_KEY"
+Secret  = "YOUR_LASTFM_SECRET"
+
+[ListenBrainz]
+Enabled = false
+
+# Serve the Feishin web build as the default UI at "/".
+# Path is resolved relative to the server's working directory.
+[Feishin]
+Enabled = true
+Path    = "./feishin/out/web"
+# Full /transfer URL of the playlist importer (transferer/app.py). Optional —
+# leave as-is for a local install, or point at your public importer URL.
+TransferURL = "http://localhost:8080/transfer"
+
+# Tidal audio provider — proxied through the local hifi-api service.
+[Tidal]
+Enabled        = true
+HifiApiURL     = "http://localhost:8001"
+DefaultQuality = "LOSSLESS"

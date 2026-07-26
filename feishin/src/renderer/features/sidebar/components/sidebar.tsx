@@ -1,0 +1,348 @@
+import clsx from 'clsx';
+import { AnimatePresence, motion } from 'motion/react';
+import { MouseEvent, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+    RiCupLine,
+    RiDownloadLine,
+    RiGroupLine,
+    RiInformationLine,
+    RiPlayListAddLine,
+} from 'react-icons/ri';
+
+import MonochromaLogo from '/@/renderer/features/servers/assets/navidrome.png';
+
+import styles from './sidebar.module.css';
+
+import { useItemImageUrl } from '/@/renderer/components/item-image/item-image';
+import { ContextMenuController } from '/@/renderer/features/context-menu/context-menu-controller';
+import {
+    useIsRadioActive,
+    useRadioPlayer,
+} from '/@/renderer/features/radio/hooks/use-radio-player';
+import { ActionBar } from '/@/renderer/features/sidebar/components/action-bar';
+import { SidebarCollectionList } from '/@/renderer/features/sidebar/components/sidebar-collection-list';
+import { SidebarIcon } from '/@/renderer/features/sidebar/components/sidebar-icon';
+import { SidebarItem } from '/@/renderer/features/sidebar/components/sidebar-item';
+import {
+    SidebarPlaylistAddDragContext,
+    SidebarPlaylistList,
+    SidebarSharedPlaylistList,
+    useSidebarPlaylistAddDragMonitor,
+} from '/@/renderer/features/sidebar/components/sidebar-playlist-list';
+import { AppRoute } from '/@/renderer/router/routes';
+import {
+    useAppStore,
+    useAppStoreActions,
+    useFullScreenPlayerStore,
+    useGeneralSettings,
+    usePlayerSong,
+    useSetFullScreenPlayerStore,
+} from '/@/renderer/store';
+import {
+    SidebarItemType,
+    useSidebarItems,
+    useSidebarPlaylistList,
+    useWindowSettings,
+} from '/@/renderer/store/settings.store';
+import { Accordion } from '/@/shared/components/accordion/accordion';
+import { ActionIcon } from '/@/shared/components/action-icon/action-icon';
+import { Center } from '/@/shared/components/center/center';
+import { Group } from '/@/shared/components/group/group';
+import { Icon } from '/@/shared/components/icon/icon';
+import { ImageUnloader } from '/@/shared/components/image/image';
+import { ScrollArea } from '/@/shared/components/scroll-area/scroll-area';
+import { Text } from '/@/shared/components/text/text';
+import { Tooltip } from '/@/shared/components/tooltip/tooltip';
+import { ExplicitStatus, LibraryItem } from '/@/shared/types/domain-types';
+import { Platform } from '/@/shared/types/types';
+
+const SidebarPlaylistSection = () => {
+    const isAddDragActive = useSidebarPlaylistAddDragMonitor();
+
+    return (
+        <SidebarPlaylistAddDragContext.Provider value={isAddDragActive}>
+            <SidebarPlaylistList />
+            <SidebarSharedPlaylistList />
+        </SidebarPlaylistAddDragContext.Provider>
+    );
+};
+
+export const Sidebar = () => {
+    const { t } = useTranslation();
+
+    const sidebarPlaylistList = useSidebarPlaylistList();
+
+    const translatedSidebarItemMap = useMemo(
+        () => ({
+            Albums: t('page.sidebar.albums'),
+            Artists: t('page.sidebar.albumArtists'),
+            'Artists-all': t('page.sidebar.artists'),
+            Collections: t('page.sidebar.collections'),
+            Favorites: t('page.sidebar.favorites'),
+            Folders: t('page.sidebar.folders'),
+            Genres: t('page.sidebar.genres'),
+            Home: t('page.sidebar.home'),
+            'Now Playing': t('page.sidebar.nowPlaying'),
+            Playlists: t('page.sidebar.playlists'),
+            Radio: t('page.sidebar.radio'),
+            Search: t('page.sidebar.search'),
+            Settings: t('page.sidebar.settings'),
+            Tracks: t('page.sidebar.tracks'),
+        }),
+        [t],
+    );
+
+    const sidebarItems = useSidebarItems();
+    const { windowBarStyle } = useWindowSettings();
+    const sidebarImageEnabled = useAppStore((state) => state.sidebar.image);
+    const showImage = sidebarImageEnabled;
+
+    const sidebarItemsWithRoute: SidebarItemType[] = useMemo(() => {
+        if (!sidebarItems) return [];
+
+        const items = sidebarItems
+            .filter((item) => !item.disabled)
+            .map((item) => ({
+                ...item,
+                label:
+                    translatedSidebarItemMap[item.id as keyof typeof translatedSidebarItemMap] ??
+                    item.label,
+            }));
+
+        return items;
+    }, [sidebarItems, translatedSidebarItemMap]);
+
+    /* Library accordion: only items with a route (exclude Collections section) */
+    const libraryItemsWithRoute = useMemo(
+        () => sidebarItemsWithRoute.filter((item) => item.id !== 'Collections' && item.route),
+        [sidebarItemsWithRoute],
+    );
+
+    const isCustomWindowBar =
+        windowBarStyle === Platform.WINDOWS || windowBarStyle === Platform.MACOS;
+
+    return (
+        <div
+            className={clsx(styles.container, {
+                [styles.customBar]: isCustomWindowBar,
+            })}
+            id="left-sidebar"
+        >
+            <Group grow id="global-search-container" style={{ flexShrink: 0 }}>
+                <ActionBar />
+            </Group>
+            <Group
+                align="center"
+                gap="sm"
+                style={{
+                    flexShrink: 0,
+                    padding: '0.25rem 1rem 0.5rem 1rem',
+                }}
+            >
+                <img
+                    alt="Monochroma"
+                    src={MonochromaLogo}
+                    style={{ height: 36, objectFit: 'contain', width: 36 }}
+                />
+                <Text fw={700} style={{ fontSize: '1.25rem', letterSpacing: '-0.01em' }}>
+                    Monochroma
+                </Text>
+            </Group>
+            <ScrollArea allowDragScroll className={styles.scrollArea}>
+                <Accordion
+                    classNames={{
+                        content: styles.accordionContent,
+                        control: styles.accordionControl,
+                        item: styles.accordionItem,
+                        root: styles.accordionRoot,
+                    }}
+                    defaultValue={['library', 'collections', 'playlists', 'platform']}
+                    multiple
+                >
+                    <Accordion.Item value="platform">
+                        <Accordion.Control>
+                            <Text fw={500} variant="secondary">
+                                Platform
+                            </Text>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                            {Boolean(window.TRANSFER_URL) && (
+                                <SidebarItem to={AppRoute.MONOCHROMA_IMPORT}>
+                                    <Group gap="md">
+                                        <RiPlayListAddLine />
+                                        Import Playlist
+                                    </Group>
+                                </SidebarItem>
+                            )}
+                            <SidebarItem to={AppRoute.MONOCHROMA_DOWNLOAD}>
+                                <Group gap="md">
+                                    <RiDownloadLine />
+                                    Download APP
+                                </Group>
+                            </SidebarItem>
+                            <SidebarItem to={AppRoute.MONOCHROMA_DONATE}>
+                                <Group gap="md">
+                                    <RiCupLine />
+                                    Donate
+                                </Group>
+                            </SidebarItem>
+                            <SidebarItem to={AppRoute.MONOCHROMA_SOCIALS}>
+                                <Group gap="md">
+                                    <RiGroupLine />
+                                    Socials
+                                </Group>
+                            </SidebarItem>
+                            <SidebarItem to={AppRoute.MONOCHROMA_ABOUT}>
+                                <Group gap="md">
+                                    <RiInformationLine />
+                                    About
+                                </Group>
+                            </SidebarItem>
+                        </Accordion.Panel>
+                    </Accordion.Item>
+                    <Accordion.Item value="library">
+                        <Accordion.Control>
+                            <Text fw={500} variant="secondary">
+                                {t('page.sidebar.myLibrary')}
+                            </Text>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                            {libraryItemsWithRoute.map((item) => {
+                                return (
+                                    <SidebarItem key={`sidebar-${item.route}`} to={item.route}>
+                                        <Group gap="md">
+                                            <SidebarIcon route={item.route} />
+                                            {item.label}
+                                        </Group>
+                                    </SidebarItem>
+                                );
+                            })}
+                        </Accordion.Panel>
+                    </Accordion.Item>
+                    <SidebarCollectionList />
+                    {sidebarPlaylistList && <SidebarPlaylistSection />}
+                </Accordion>
+            </ScrollArea>
+            <AnimatePresence initial={false} mode="popLayout">
+                {showImage && <SidebarImage />}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+const SidebarImage = () => {
+    const { t } = useTranslation();
+    const { setSideBar } = useAppStoreActions();
+    const currentSong = usePlayerSong();
+    const isRadioActive = useIsRadioActive();
+    const { currentStationArt, isPlaying: isRadioPlaying } = useRadioPlayer();
+    const { blurExplicitImages } = useGeneralSettings();
+
+    const imageUrl = useItemImageUrl({
+        id: currentSong?.imageId || undefined,
+        itemType: LibraryItem.SONG,
+        serverId: currentSong?._serverId,
+        type: 'sidebar',
+    });
+
+    const radioImageUrl = useItemImageUrl({
+        id: isRadioActive ? currentStationArt?.imageId || undefined : undefined,
+        imageUrl: isRadioActive ? currentStationArt?.imageUrl || undefined : undefined,
+        itemType: LibraryItem.RADIO_STATION,
+        serverId: isRadioActive ? currentStationArt?.serverId : undefined,
+        type: 'sidebar',
+    });
+
+    const isPlayingRadio = isRadioActive && isRadioPlaying;
+    const isSongDefined = Boolean(currentSong?.id);
+
+    const setFullScreenPlayerStore = useSetFullScreenPlayerStore();
+    const { expanded: isFullScreenPlayerExpanded } = useFullScreenPlayerStore();
+    const expandFullScreenPlayer = () => {
+        setFullScreenPlayerStore({ expanded: !isFullScreenPlayerExpanded });
+    };
+
+    const handleToggleContextMenu = (e: MouseEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!currentSong || isPlayingRadio) {
+            return;
+        }
+
+        if (isSongDefined && !isFullScreenPlayerExpanded) {
+            ContextMenuController.call({
+                cmd: { items: [currentSong!], type: LibraryItem.SONG },
+                event: e,
+            });
+        }
+    };
+
+    return (
+        <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className={styles.imageContainer}
+            exit={{ opacity: 0, y: 200 }}
+            initial={{ opacity: 0, y: 200 }}
+            key="sidebar-image"
+            onClick={expandFullScreenPlayer}
+            onContextMenu={handleToggleContextMenu}
+            role="button"
+            style={{ aspectRatio: 1 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+        >
+            <Tooltip label={t('player.toggleFullscreenPlayer')}>
+                {isRadioActive && radioImageUrl ? (
+                    <img className={styles.sidebarImage} loading="eager" src={radioImageUrl} />
+                ) : isRadioActive ? (
+                    <Center
+                        className={styles.sidebarImage}
+                        style={{
+                            background: 'var(--theme-colors-surface)',
+                            borderRadius: 'var(--theme-card-default-radius)',
+                            height: '100%',
+                            width: '100%',
+                        }}
+                    >
+                        <Icon color="muted" icon="radio" size="40%" />
+                    </Center>
+                ) : imageUrl ? (
+                    <img
+                        className={clsx(styles.sidebarImage, {
+                            [styles.censored]:
+                                currentSong?.explicitStatus === ExplicitStatus.EXPLICIT &&
+                                blurExplicitImages,
+                        })}
+                        loading="eager"
+                        src={imageUrl}
+                    />
+                ) : (
+                    <ImageUnloader icon="emptySongImage" />
+                )}
+            </Tooltip>
+            <ActionIcon
+                icon="arrowDownS"
+                iconProps={{
+                    size: 'lg',
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setSideBar({ image: false });
+                }}
+                opacity={0.8}
+                radius="md"
+                style={{
+                    cursor: 'default',
+                    position: 'absolute',
+                    right: '1rem',
+                    top: '1rem',
+                }}
+                tooltip={{
+                    label: t('common.collapse'),
+                    openDelay: 500,
+                }}
+            />
+        </motion.div>
+    );
+};

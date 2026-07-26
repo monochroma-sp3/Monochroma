@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <title>Monochroma — Free Music Streaming, Any Song On Demand</title>
+        <meta
+            name="description"
+            content="Monochroma is a free music streaming service. Search any song, artist or album and stream it instantly in high quality — no ads, no subscription. Create playlists, import them from Spotify or Apple Music, and listen on the web or your favorite mobile app."
+        />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
+        <link rel="canonical" href="https://monochroma.cc/" />
+        <meta name="theme-color" content="#1E003D" />
+
+        <!-- Open Graph -->
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Monochroma" />
+        <meta property="og:title" content="Monochroma — Free Music Streaming, Any Song On Demand" />
+        <meta
+            property="og:description"
+            content="Search any song, artist or album and stream it instantly in high quality — no ads, no subscription. Playlists included, importable from Spotify and Apple Music."
+        />
+        <meta property="og:url" content="https://monochroma.cc/" />
+        <meta property="og:image" content="https://monochroma.cc/assets/512x512.png" />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
+
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Monochroma — Free Music Streaming, Any Song On Demand" />
+        <meta
+            name="twitter:description"
+            content="Search any song, artist or album and stream it instantly in high quality — no ads, no subscription."
+        />
+        <meta name="twitter:image" content="https://monochroma.cc/assets/512x512.png" />
+
+        <link rel="apple-touch-icon" href="./assets/256x256.png" />
+
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                "name": "Monochroma",
+                "url": "https://monochroma.cc/",
+                "description": "Free music streaming service: search any song, artist or album and stream it instantly in high quality. Create and import playlists, listen on the web or through Subsonic-compatible mobile apps.",
+                "applicationCategory": "MultimediaApplication",
+                "operatingSystem": "Web, iOS, Android",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "EUR"
+                }
+            }
+        </script>
+        <% if (web) { %>
+        <link rel="icon" href="./assets/favicon.ico" />
+        <script src="settings.js"></script>
+        <% } %>
+        <script>
+            (function () {
+                if (localStorage.getItem('umami.disabled') !== '1' && window.ANALYTICS_DISABLED !== true && window.ANALYTICS_DISABLED !== 'true') {
+                    var s = document.createElement('script');
+                    s.defer = true;
+                    s.src = 'https://umami.jeffvli.org/script.js';
+                    s.setAttribute('data-website-id', '5120fc56-cffa-4d42-8b6c-9afb6f459251');
+                    s.setAttribute('data-exclude-search', 'true');
+                    s.setAttribute('data-exclude-hash', 'true');
+                    s.setAttribute('data-auto-track', 'false');
+                    document.head.appendChild(s);
+                }
+            })();
+        </script>
+    </head>
+
+    <body style="background-color: #000">
+        <div id="root">
+            <script type="module" src="main.tsx"></script>
+        </div>
+        <noscript>
+            <h1>Monochroma — Free Music Streaming</h1>
+            <p>
+                Monochroma lets you search any song, artist or album and stream it instantly in high
+                quality, free and without ads. Create an account, build playlists or import them from
+                Spotify and Apple Music, and listen from your browser or any Subsonic-compatible app
+                such as substreamer or Tempo. JavaScript is required to use the player.
+            </p>
+        </noscript>
+    </body>
+</html>
